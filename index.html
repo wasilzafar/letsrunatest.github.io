@@ -93,6 +93,22 @@
             orgId: "B504732B5D3B2A790A495ECF@AdobeOrg",
             debugEnabled: true
         });
+        // Set consent using the Adobe 2.0 standard
+        alloy("setConsent", {
+        "consent": [{
+            "standard": "Adobe",
+            "version": "2.0",
+            "value": {
+            "collect": {
+                "val": "y"
+            },
+            "metadata": {
+                "time": "2026-02-03T15:48:42-07:00"
+            }
+            }
+        }]
+        });
+
     </script>
 
 </head>
