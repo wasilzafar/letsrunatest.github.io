@@ -177,9 +177,14 @@
             log.insertBefore(item, log.firstChild);
         }
 
-        // Send Page View event on load
+        // Send Page View event on load with automatic display events
         window.addEventListener('load', function() {
+            // Request personalization and automatically send display events
             alloy("sendEvent", {
+                renderDecisions: true,
+                personalization: {
+                    sendDisplayEvent: true
+                },
                 xdm: {
                     eventType: "web.webpagedetails.pageViews",
                     web: {
@@ -206,8 +211,19 @@
                     }
                 }
             }).then(function(result) {
-                console.log("Page View event sent:", result);
-                logEvent("web.webpagedetails.pageViews", "Page loaded successfully");
+                console.log("Page View event sent with personalization:", result);
+                logEvent("web.webpagedetails.pageViews", "Page loaded with renderDecisions");
+                
+                // Log propositions if any were returned
+                if (result.propositions && result.propositions.length > 0) {
+                    console.log("Propositions received:", result.propositions);
+                    logEvent("decisioning.propositions", result.propositions.length + " proposition(s) received");
+                    
+                    // Display events are sent automatically since sendDisplayEvent: true
+                    result.propositions.forEach(function(proposition, index) {
+                        logEvent("decisioning.display", "Auto display event for scope: " + (proposition.scope || "unknown"));
+                    });
+                }
             }).catch(function(error) {
                 console.error("Error sending Page View event:", error);
             });
@@ -387,6 +403,79 @@
             }
         }
 
+        // Request Personalization with automatic display events
+        function requestPersonalization() {
+            alloy("sendEvent", {
+                renderDecisions: true,
+                personalization: {
+                    sendDisplayEvent: true,
+                    decisionScopes: ["hero-banner", "homepage-offer", "__view__"]
+                },
+                xdm: {
+                    eventType: "decisioning.propositionFetch",
+                    web: {
+                        webPageDetails: {
+                            URL: window.location.href,
+                            name: document.title
+                        }
+                    }
+                }
+            }).then(function(result) {
+                console.log("Personalization request sent:", result);
+                logEvent("decisioning.propositionFetch", "Requested personalization");
+                
+                if (result.propositions && result.propositions.length > 0) {
+                    logEvent("decisioning.propositions", result.propositions.length + " proposition(s) received");
+                    
+                    // Display events sent automatically
+                    result.propositions.forEach(function(prop) {
+                        console.log("Proposition:", prop);
+                        logEvent("decisioning.display", "Auto display for: " + (prop.scope || "default"));
+                    });
+                } else {
+                    logEvent("decisioning.propositions", "No propositions returned (check Target/Offer Decisioning config)");
+                }
+            }).catch(function(error) {
+                console.error("Personalization error:", error);
+                logEvent("error", "Personalization request failed");
+            });
+        }
+
+        // Manual display event for custom rendered content
+        function sendManualDisplayEvent() {
+            alloy("sendEvent", {
+                xdm: {
+                    eventType: "decisioning.propositionDisplay",
+                    _experience: {
+                        decisioning: {
+                            propositions: [{
+                                id: "manual-proposition-" + Date.now(),
+                                scope: "custom-banner",
+                                scopeDetails: {
+                                    decisionProvider: "TGT",
+                                    activity: {
+                                        id: "manual-activity-001"
+                                    }
+                                }
+                            }],
+                            propositionEventType: {
+                                display: 1
+                            }
+                        }
+                    },
+                    web: {
+                        webPageDetails: {
+                            URL: window.location.href,
+                            name: document.title
+                        }
+                    }
+                }
+            }).then(function(result) {
+                console.log("Manual display event sent:", result);
+                logEvent("decisioning.propositionDisplay", "Manual display event sent for custom-banner");
+            });
+        }
+
     </script>
 
 </head>
@@ -403,6 +492,8 @@
             <button class="event-btn" onclick="sendPurchaseEvent()">💳 Purchase</button>
             <button class="event-btn" onclick="sendSearchEvent()">🔍 Search</button>
             <button class="event-btn" onclick="sendLinkClickEvent('Test Link')">🔗 Link Click</button>
+            <button class="event-btn" onclick="requestPersonalization()">🎯 Request Personalization</button>
+            <button class="event-btn" onclick="sendManualDisplayEvent()">👁️ Manual Display Event</button>
         </div>
 
         <div class="event-log" id="eventLog">
