@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -55,8 +56,15 @@
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
         }
 
         footer {
@@ -66,7 +74,22 @@
             font-size: 0.875rem;
         }
     </style>
+    <script>
+        !function (n, o) {
+            o.forEach(function (o) {
+                n[o] || ((n.__alloyNS = n.__alloyNS ||
+                    []).push(o), n[o] = function () {
+                        var u = arguments; return new Promise(
+                            function (i, l) { n.setTimeout(function () { n[o].q.push([i, l, u]) }) })
+                    }, n[o].q = [])
+            })
+        }
+            (window, ["alloy"]);
+    </script>
+    <script src="https://cdn1.adoberesources.net/alloy/2.19.1/alloy.min.js" async></script>
+
 </head>
+
 <body>
     <div class="container">
         <h1>🧪 Let's Run a Test</h1>
@@ -77,4 +100,5 @@
         <a href="https://github.com/wasilzafar/letsrunatest.github.io" style="color: #fff;">View on GitHub</a>
     </footer>
 </body>
+
 </html>
