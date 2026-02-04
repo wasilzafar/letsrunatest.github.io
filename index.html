@@ -67,6 +67,64 @@
             }
         }
 
+        .event-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .event-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .event-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .event-btn:active {
+            transform: translateY(0);
+        }
+
+        .event-log {
+            margin-top: 2rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: left;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
+        .event-log-item {
+            padding: 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .event-log-item:last-child {
+            border-bottom: none;
+        }
+
+        .event-log-item .time {
+            color: #4ade80;
+        }
+
+        .event-log-item .type {
+            color: #fbbf24;
+        }
+
         footer {
             position: fixed;
             bottom: 1rem;
@@ -109,6 +167,226 @@
         }]
         });
 
+        // Helper function to log events to the UI
+        function logEvent(eventType, details) {
+            const log = document.getElementById('eventLog');
+            const time = new Date().toLocaleTimeString();
+            const item = document.createElement('div');
+            item.className = 'event-log-item';
+            item.innerHTML = `<span class="time">[${time}]</span> <span class="type">${eventType}</span> - ${details}`;
+            log.insertBefore(item, log.firstChild);
+        }
+
+        // Send Page View event on load
+        window.addEventListener('load', function() {
+            alloy("sendEvent", {
+                xdm: {
+                    eventType: "web.webpagedetails.pageViews",
+                    web: {
+                        webPageDetails: {
+                            URL: window.location.href,
+                            name: document.title,
+                            pageViews: {
+                                value: 1
+                            }
+                        },
+                        webReferrer: {
+                            URL: document.referrer || ""
+                        }
+                    },
+                    device: {
+                        screenWidth: window.screen.width,
+                        screenHeight: window.screen.height
+                    },
+                    environment: {
+                        browserDetails: {
+                            viewportWidth: window.innerWidth,
+                            viewportHeight: window.innerHeight
+                        }
+                    }
+                }
+            }).then(function(result) {
+                console.log("Page View event sent:", result);
+                logEvent("web.webpagedetails.pageViews", "Page loaded successfully");
+            }).catch(function(error) {
+                console.error("Error sending Page View event:", error);
+            });
+        });
+
+        // Product View Event
+        function sendProductViewEvent() {
+            alloy("sendEvent", {
+                xdm: {
+                    eventType: "commerce.productViews",
+                    commerce: {
+                        productViews: {
+                            value: 1
+                        }
+                    },
+                    productListItems: [{
+                        SKU: "TEST-SKU-001",
+                        name: "Test Product",
+                        currencyCode: "USD",
+                        priceTotal: 99.99,
+                        quantity: 1,
+                        productCategories: [{
+                            categoryID: "cat-001",
+                            categoryName: "Test Category",
+                            categoryPath: "Home > Test Category"
+                        }]
+                    }],
+                    web: {
+                        webPageDetails: {
+                            URL: window.location.href,
+                            name: "Product Detail Page"
+                        }
+                    }
+                }
+            }).then(function(result) {
+                console.log("Product View event sent:", result);
+                logEvent("commerce.productViews", "SKU: TEST-SKU-001, Price: $99.99");
+            });
+        }
+
+        // Add to Cart Event
+        function sendAddToCartEvent() {
+            alloy("sendEvent", {
+                xdm: {
+                    eventType: "commerce.productListAdds",
+                    commerce: {
+                        productListAdds: {
+                            value: 1
+                        },
+                        cart: {
+                            cartID: "cart-" + Date.now(),
+                            cartSource: "web"
+                        }
+                    },
+                    productListItems: [{
+                        SKU: "TEST-SKU-001",
+                        name: "Test Product",
+                        currencyCode: "USD",
+                        priceTotal: 99.99,
+                        quantity: 1,
+                        productAddMethod: "button click"
+                    }],
+                    web: {
+                        webInteraction: {
+                            name: "Add to Cart",
+                            type: "other",
+                            linkClicks: {
+                                value: 1
+                            }
+                        }
+                    }
+                }
+            }).then(function(result) {
+                console.log("Add to Cart event sent:", result);
+                logEvent("commerce.productListAdds", "Added TEST-SKU-001 to cart");
+            });
+        }
+
+        // Purchase Event
+        function sendPurchaseEvent() {
+            const orderId = "ORD-" + Date.now();
+            alloy("sendEvent", {
+                xdm: {
+                    eventType: "commerce.purchases",
+                    commerce: {
+                        purchases: {
+                            value: 1
+                        },
+                        order: {
+                            purchaseID: orderId,
+                            currencyCode: "USD",
+                            priceTotal: 109.98,
+                            taxAmount: 9.99,
+                            orderType: "checkout",
+                            payments: [{
+                                currencyCode: "USD",
+                                paymentAmount: 109.98,
+                                paymentType: "credit_card",
+                                transactionID: "TXN-" + Date.now()
+                            }]
+                        },
+                        shipping: {
+                            shippingMethod: "Standard",
+                            shippingAmount: 0,
+                            currencyCode: "USD"
+                        }
+                    },
+                    productListItems: [{
+                        SKU: "TEST-SKU-001",
+                        name: "Test Product",
+                        currencyCode: "USD",
+                        priceTotal: 99.99,
+                        quantity: 1
+                    }],
+                    web: {
+                        webPageDetails: {
+                            URL: window.location.href,
+                            name: "Order Confirmation"
+                        }
+                    }
+                }
+            }).then(function(result) {
+                console.log("Purchase event sent:", result);
+                logEvent("commerce.purchases", "Order: " + orderId + ", Total: $109.98");
+            });
+        }
+
+        // Custom Link Click Event
+        function sendLinkClickEvent(linkName) {
+            alloy("sendEvent", {
+                xdm: {
+                    eventType: "web.webinteraction.linkClicks",
+                    web: {
+                        webInteraction: {
+                            name: linkName,
+                            type: "other",
+                            URL: window.location.href,
+                            linkClicks: {
+                                value: 1
+                            }
+                        },
+                        webPageDetails: {
+                            URL: window.location.href,
+                            name: document.title
+                        }
+                    }
+                }
+            }).then(function(result) {
+                console.log("Link Click event sent:", result);
+                logEvent("web.webinteraction.linkClicks", "Link: " + linkName);
+            });
+        }
+
+        // Search Event
+        function sendSearchEvent() {
+            const searchTerm = prompt("Enter search term:", "test product");
+            if (searchTerm) {
+                alloy("sendEvent", {
+                    xdm: {
+                        eventType: "search.productSearch",
+                        search: {
+                            keywords: searchTerm,
+                            isPaid: false,
+                            searchEngine: "internal"
+                        },
+                        web: {
+                            webPageDetails: {
+                                URL: window.location.href,
+                                name: "Search Results"
+                            }
+                        }
+                    }
+                }).then(function(result) {
+                    console.log("Search event sent:", result);
+                    logEvent("search.productSearch", "Keywords: " + searchTerm);
+                });
+            }
+        }
+
     </script>
 
 </head>
@@ -118,6 +396,18 @@
         <h1>🧪 Let's Run a Test</h1>
         <p>A sandbox for experimenting with code, configurations, and workflows.</p>
         <div class="status">Site is live and running!</div>
+
+        <div class="event-buttons">
+            <button class="event-btn" onclick="sendProductViewEvent()">📦 Product View</button>
+            <button class="event-btn" onclick="sendAddToCartEvent()">🛒 Add to Cart</button>
+            <button class="event-btn" onclick="sendPurchaseEvent()">💳 Purchase</button>
+            <button class="event-btn" onclick="sendSearchEvent()">🔍 Search</button>
+            <button class="event-btn" onclick="sendLinkClickEvent('Test Link')">🔗 Link Click</button>
+        </div>
+
+        <div class="event-log" id="eventLog">
+            <div class="event-log-item"><em>Events will appear here...</em></div>
+        </div>
     </div>
     <footer>
         <a href="https://github.com/wasilzafar/letsrunatest.github.io" style="color: #fff;">View on GitHub</a>
