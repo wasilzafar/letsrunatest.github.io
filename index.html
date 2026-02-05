@@ -125,6 +125,35 @@
             color: #fbbf24;
         }
 
+        .hero-section {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            min-height: 80px;
+        }
+
+        .hero-section h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: #fbbf24;
+        }
+
+        .hero-section .personalized-content {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: monospace;
+            text-align: left;
+            word-break: break-all;
+        }
+
+        .hero-section .placeholder {
+            opacity: 0.6;
+            font-style: italic;
+        }
+
         footer {
             position: fixed;
             bottom: 1rem;
@@ -177,13 +206,123 @@
             log.insertBefore(item, log.firstChild);
         }
 
-        // Send Page View event on load with automatic display events
-        window.addEventListener('load', function() {
-            // Request personalization and automatically send display events
+        // Store propositions for sending display/interact events
+        let heroSectionProposition = null;
+
+        // Function to send display event for code-based experience
+        function sendCodeBasedDisplayEvent(proposition) {
+            const { id, scope, scopeDetails = {} } = proposition;
+            
             alloy("sendEvent", {
-                renderDecisions: true,
+                xdm: {
+                    eventType: "decisioning.propositionDisplay",
+                    _experience: {
+                        decisioning: {
+                            propositions: [{
+                                id: id,
+                                scope: scope,
+                                scopeDetails: scopeDetails
+                            }],
+                            propositionEventType: {
+                                display: 1
+                            }
+                        }
+                    }
+                }
+            }).then(function(result) {
+                console.log("Code-based display event sent:", result);
+                logEvent("decisioning.propositionDisplay", "Display event sent for: " + scope);
+            });
+        }
+
+        // Function to send interact event for code-based experience
+        function sendCodeBasedInteractEvent(label, proposition) {
+            const { id, scope, scopeDetails = {} } = proposition;
+            
+            alloy("sendEvent", {
+                xdm: {
+                    eventType: "decisioning.propositionInteract",
+                    _experience: {
+                        decisioning: {
+                            propositions: [{
+                                id: id,
+                                scope: scope,
+                                scopeDetails: scopeDetails
+                            }],
+                            propositionEventType: {
+                                interact: 1
+                            },
+                            propositionAction: {
+                                label: label
+                            }
+                        }
+                    }
+                }
+            }).then(function(result) {
+                console.log("Code-based interact event sent:", result);
+                logEvent("decisioning.propositionInteract", "Interact event: " + label);
+            });
+        }
+
+        // Function to apply personalization to hero-section
+        function applyHeroSectionPersonalization(propositions) {
+            const heroSection = document.getElementById('hero-section-content');
+            
+            // Find the proposition for hero-section surface
+            const heroProposition = propositions.find(function(prop) {
+                return prop.scope === "web://letsrunatest.com/#hero-section" || 
+                       prop.scope === "hero-section" ||
+                       prop.scope.includes("hero-section");
+            });
+            
+            if (heroProposition && heroProposition.items && heroProposition.items.length > 0) {
+                heroSectionProposition = heroProposition;
+                
+                // Get the JSON content from the proposition
+                const item = heroProposition.items[0];
+                let content = null;
+                
+                if (item.data && item.data.content) {
+                    content = item.data.content;
+                } else if (item.content) {
+                    content = item.content;
+                }
+                
+                if (content) {
+                    // Parse JSON if it's a string
+                    let jsonContent = typeof content === 'string' ? JSON.parse(content) : content;
+                    
+                    // Render the personalized JSON content
+                    heroSection.innerHTML = `
+                        <div class="personalized-content">
+                            <strong>🎉 Personalized Content:</strong><br>
+                            <pre>${JSON.stringify(jsonContent, null, 2)}</pre>
+                            ${jsonContent.lastPurchase ? `<p>Your last purchase: <strong>#${jsonContent.lastPurchase}</strong></p>` : ''}
+                        </div>
+                    `;
+                    
+                    logEvent("code-based.applied", "Hero section personalized with JSON content");
+                    
+                    // Send display event after rendering
+                    sendCodeBasedDisplayEvent(heroProposition);
+                    
+                    return true;
+                }
+            }
+            
+            // No personalization found
+            heroSection.innerHTML = `<span class="placeholder">No personalization returned for hero-section. Configure a code-based experience in AJO with surface: web://letsrunatest.com/#hero-section</span>`;
+            logEvent("code-based.none", "No personalization for hero-section");
+            return false;
+        }
+
+        // Send Page View event on load and request code-based experience
+        window.addEventListener('load', function() {
+            // Request personalization with code-based experience surface
+            alloy("sendEvent", {
+                renderDecisions: false, // We'll manually render code-based experiences
                 personalization: {
-                    sendDisplayEvent: true
+                    surfaces: ["web://letsrunatest.com/#hero-section"]
                 },
                 xdm: {
                     eventType: "web.webpagedetails.pageViews",
@@ -211,21 +350,25 @@
                     }
                 }
             }).then(function(result) {
-                console.log("Page View event sent with personalization:", result);
-                logEvent("web.webpagedetails.pageViews", "Page loaded with renderDecisions");
+                console.log("Page View event sent with code-based experience request:", result);
+                logEvent("web.webpagedetails.pageViews", "Page loaded, requesting hero-section personalization");
                 
                 // Log propositions if any were returned
                 if (result.propositions && result.propositions.length > 0) {
                     console.log("Propositions received:", result.propositions);
                     logEvent("decisioning.propositions", result.propositions.length + " proposition(s) received");
                     
-                    // Display events are sent automatically since sendDisplayEvent: true
-                    result.propositions.forEach(function(proposition, index) {
-                        logEvent("decisioning.display", "Auto display event for scope: " + (proposition.scope || "unknown"));
-                    });
+                    // Apply personalization to hero-section
+                    applyHeroSectionPersonalization(result.propositions);
+                } else {
+                    // No propositions - show placeholder
+                    const heroSection = document.getElementById('hero-section-content');
+                    heroSection.innerHTML = `<span class="placeholder">No personalization returned. Configure a code-based experience in AJO with surface: web://letsrunatest.com/#hero-section</span>`;
+                    logEvent("code-based.none", "No propositions returned from Edge");
                 }
             }).catch(function(error) {
                 console.error("Error sending Page View event:", error);
+                logEvent("error", "Failed to fetch personalization: " + error.message);
             });
         });
 
@@ -476,6 +619,51 @@
             });
         }
 
+        // Refresh hero section - fetch personalization again
+        function refreshHeroSection() {
+            const heroSection = document.getElementById('hero-section-content');
+            heroSection.innerHTML = `<span class="placeholder">Refreshing personalization...</span>`;
+            
+            alloy("sendEvent", {
+                renderDecisions: false,
+                personalization: {
+                    surfaces: ["web://letsrunatest.com/#hero-section"]
+                },
+                xdm: {
+                    eventType: "decisioning.propositionFetch",
+                    web: {
+                        webPageDetails: {
+                            URL: window.location.href,
+                            name: document.title
+                        }
+                    }
+                }
+            }).then(function(result) {
+                console.log("Hero section refresh result:", result);
+                logEvent("code-based.refresh", "Refreshing hero-section personalization");
+                
+                if (result.propositions && result.propositions.length > 0) {
+                    applyHeroSectionPersonalization(result.propositions);
+                } else {
+                    heroSection.innerHTML = `<span class="placeholder">No personalization returned. Configure in AJO with surface: web://letsrunatest.com/#hero-section</span>`;
+                    logEvent("code-based.none", "No propositions on refresh");
+                }
+            }).catch(function(error) {
+                console.error("Error refreshing hero section:", error);
+                heroSection.innerHTML = `<span class="placeholder">Error: ${error.message}</span>`;
+            });
+        }
+
+        // Send interact event for hero section
+        function sendHeroInteractEvent() {
+            if (heroSectionProposition) {
+                sendCodeBasedInteractEvent("hero-section-click", heroSectionProposition);
+            } else {
+                logEvent("code-based.error", "No hero section proposition to interact with");
+                alert("No personalization has been applied yet. Wait for personalization to load or click 'Refresh Hero Section'.");
+            }
+        }
+
     </script>
 
 </head>
@@ -486,6 +674,14 @@
         <p>A sandbox for experimenting with code, configurations, and workflows.</p>
         <div class="status">Site is live and running!</div>
 
+        <!-- Hero Section for Code-Based Experience -->
+        <div class="hero-section" id="hero-section">
+            <h3>🎯 Code-Based Experience (hero-section)</h3>
+            <div id="hero-section-content">
+                <span class="placeholder">Loading personalization...</span>
+            </div>
+        </div>
+
         <div class="event-buttons">
             <button class="event-btn" onclick="sendProductViewEvent()">📦 Product View</button>
             <button class="event-btn" onclick="sendAddToCartEvent()">🛒 Add to Cart</button>
@@ -494,6 +690,8 @@
             <button class="event-btn" onclick="sendLinkClickEvent('Test Link')">🔗 Link Click</button>
             <button class="event-btn" onclick="requestPersonalization()">🎯 Request Personalization</button>
             <button class="event-btn" onclick="sendManualDisplayEvent()">👁️ Manual Display Event</button>
+            <button class="event-btn" onclick="refreshHeroSection()">🔄 Refresh Hero Section</button>
+            <button class="event-btn" onclick="sendHeroInteractEvent()">👆 Hero Interact</button>
         </div>
 
         <div class="event-log" id="eventLog">
