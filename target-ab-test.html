@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A/B Test Demo — Adobe Target | Let's Run a Test</title>
+    <link rel="stylesheet" href="styles/common.css">
+    <style>
+        :root{--accent:#3b82f6;--accent-dark:#1d4ed8;--accent-light:#3b82f6;--checkmark-color:#4ade80;--badge-bg:#2563eb;--accent-shadow:rgba(59,130,246,0.4)}
+
+        /* Experience display */
+        .experience-container{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem}
+        .experience-card{background:rgba(255,255,255,0.04);border:2px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.5rem;text-align:center;transition:all 0.3s;position:relative;min-height:160px;display:flex;flex-direction:column;justify-content:center;align-items:center}
+        .experience-card.active{border-color:#3b82f6;background:rgba(59,130,246,0.08);box-shadow:0 0 20px rgba(59,130,246,0.15)}
+        .experience-card.active::after{content:"✓ Assigned";position:absolute;top:-10px;right:10px;background:#3b82f6;color:#fff;padding:0.15rem 0.5rem;border-radius:4px;font-size:0.7rem;font-weight:700}
+        .experience-card.inactive{opacity:0.4}
+        .experience-card .exp-label{font-weight:700;font-size:0.85rem;color:#aaa;margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.05em}
+        .experience-card .exp-content{background:rgba(255,255,255,0.06);border-radius:8px;padding:1rem;width:100%;color:#ddd;font-size:0.95rem;min-height:50px;display:flex;align-items:center;justify-content:center}
+
+        /* Live experience output */
+        .live-experience{background:rgba(59,130,246,0.06);border:2px dashed rgba(59,130,246,0.3);border-radius:12px;padding:2rem;text-align:center;margin-bottom:1.5rem;min-height:100px;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:all 0.4s ease}
+        .live-experience.loaded{border-style:solid;border-color:#3b82f6;background:rgba(59,130,246,0.1)}
+        .live-experience.error{border-color:#ef4444;background:rgba(239,68,68,0.06)}
+        .live-experience .exp-title{font-size:0.8rem;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem}
+        .live-experience .exp-rendered{font-size:1.1rem;color:#fff}
+        .live-experience .exp-rendered p{color:#fff;margin:0;font-size:1.1rem}
+        .live-experience .loading-spinner{display:inline-block;width:24px;height:24px;border:3px solid rgba(59,130,246,0.3);border-top-color:#3b82f6;border-radius:50%;animation:spin 0.8s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+
+        /* Proposition details */
+        .proposition-details{background:rgba(255,255,255,0.03);border-radius:10px;padding:1.25rem;margin-bottom:1.5rem}
+        .proposition-details h4{font-size:0.85rem;color:#3b82f6;margin-bottom:0.75rem}
+        .prop-table{width:100%;border-collapse:collapse}
+        .prop-table td{padding:0.4rem 0.75rem;font-size:0.82rem;border-bottom:1px solid rgba(255,255,255,0.04)}
+        .prop-table td:first-child{color:#888;width:140px;white-space:nowrap}
+        .prop-table td:last-child{color:#ccc;font-family:'SF Mono','Fira Code',monospace;word-break:break-all}
+
+        /* Config display */
+        .config-block{background:rgba(0,0,0,0.3);border-radius:8px;padding:1rem;margin-bottom:1rem;font-family:'SF Mono','Fira Code',monospace;font-size:0.78rem;color:#aaa;overflow-x:auto}
+        .config-block .key{color:#fbbf24}
+        .config-block .val{color:#4ade80}
+        .config-block .comment{color:#555}
+        .log{max-height:250px}
+        @media(max-width:768px){.experience-container{grid-template-columns:1fr}}
+    </style>
+
+    <!-- Alloy Web SDK Inline Stub -->
+    <script>
+        !function (n, o) {
+            o.forEach(function (o) {
+                n[o] || ((n.__alloyNS = n.__alloyNS ||
+                    []).push(o), n[o] = function () {
+                        var u = arguments; return new Promise(
+                            function (i, l) { n.setTimeout(function () { n[o].q.push([i, l, u]) }) })
+                    }, n[o].q = [])
+            })
+        }
+            (window, ["alloy"]);
+    </script>
+    <script src="https://cdn1.adoberesources.net/alloy/2.24.0/alloy.min.js" async></script>
+
+    <script>
+        // Configure Alloy Web SDK (same config as code-based experiences)
+        alloy("configure", {
+            datastreamId: "f50c86ad-a830-4068-a224-a7548d3c3f8d",
+            orgId: "B504732B5D3B2A790A495ECF@AdobeOrg",
+            debugEnabled: true,
+            autoCollectPropositionInteractions: {
+                "AJO": "always",
+                "TGT": "always"
+            }
+        });
+
+        // Set consent using the Adobe 2.0 standard
+        alloy("setConsent", {
+            consent: [{
+                standard: "Adobe",
+                version: "2.0",
+                value: {
+                    collect: { val: "y" },
+                    metadata: { time: new Date().toISOString() }
+                }
+            }]
+        });
+
+        // ── State ──
+        let currentProposition = null;   // The proposition returned from Target
+        let assignedExperience = null;   // "A" or "B" (or null)
+        let displayEventSent = false;
+        let interactEventSent = false;
+
+        // ── Helper: Log to UI ──
+        function logEvent(type, msg) {
+            const el = document.getElementById('log');
+            const t = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            const cls = type === 'display' ? 'w' : type === 'interact' ? 'i' : type === 'error' ? 'l' : 'a';
+            entry.innerHTML = `<span class="t">[${t}]</span> <span class="${cls}">${type}</span> — ${msg}`;
+            if (el.querySelector('em')) el.innerHTML = '';
+            el.insertBefore(entry, el.firstChild);
+        }
+
+        // ── Step 1: Request Propositions ──
+        function requestABTest() {
+            const liveEl = document.getElementById('live-experience');
+            liveEl.className = 'live-experience';
+            liveEl.innerHTML = `
+                <div class="exp-title">Requesting Experience from Adobe Target…</div>
+                <div class="loading-spinner"></div>
+            `;
+            logEvent('fetch', 'Sending personalization request — decisionScopes: ["wz_ab_exp1"]');
+
+            // Clear previous state
+            currentProposition = null;
+            assignedExperience = null;
+            displayEventSent = false;
+            interactEventSent = false;
+            updatePropositionDetails(null);
+            document.querySelectorAll('.experience-card').forEach(c => c.classList.remove('active', 'inactive'));
+
+            alloy("sendEvent", {
+                renderDecisions: false,
+                personalization: {
+                    decisionScopes: ["wz_ab_exp1"]
+                },
+                xdm: {
+                    eventType: "web.webpagedetails.pageViews",
+                    web: {
+                        webPageDetails: {
+                            URL: window.location.href,
+                            name: document.title,
+                            pageViews: { value: 1 }
+                        },
+                        webReferrer: { URL: document.referrer || "" }
+                    }
+                }
+            }).then(function(result) {
+                console.log("A/B Test sendEvent result:", result);
+                logEvent('response', 'Edge response received');
+
+                const propositions = result.propositions || [];
+                logEvent('propositions', propositions.length + ' proposition(s) returned');
+
+                if (propositions.length === 0) {
+                    showNoProposition();
+                    return;
+                }
+
+                // Find the proposition for our decision scope
+                const prop = propositions.find(function(p) {
+                    return p.scope === 'wz_ab_exp1';
+                });
+
+                if (!prop) {
+                    logEvent('warn', 'No proposition found for scope "wz_ab_exp1"');
+                    showNoProposition();
+                    return;
+                }
+
+                currentProposition = prop;
+                logEvent('proposition', 'Found proposition for wz_ab_exp1 — id: ' + prop.id);
+
+                // Step 2: Render the proposition
+                renderProposition(prop);
+
+            }).catch(function(error) {
+                console.error("A/B Test error:", error);
+                logEvent('error', 'Failed to fetch: ' + error.message);
+                const liveEl = document.getElementById('live-experience');
+                liveEl.className = 'live-experience error';
+                liveEl.innerHTML = `
+                    <div class="exp-title">Error</div>
+                    <div class="exp-rendered" style="color:#ef4444;">Failed to fetch experience: ${error.message}</div>
+                `;
+            });
+        }
+
+        // ── Step 2: Render Proposition (Manual) ──
+        function renderProposition(proposition) {
+            const liveEl = document.getElementById('live-experience');
+
+            if (!proposition.items || proposition.items.length === 0) {
+                logEvent('warn', 'Proposition has no items');
+                showNoProposition();
+                return;
+            }
+
+            const item = proposition.items[0];
+            let content = '';
+
+            // Extract content — support html-content-item and json-content-item schemas
+            if (item.schema === 'https://ns.adobe.com/personalization/html-content-item') {
+                content = item.data ? item.data.content : (item.content || '');
+            } else if (item.schema === 'https://ns.adobe.com/personalization/json-content-item') {
+                const jsonData = item.data ? item.data.content : (item.content || {});
+                const parsed = typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
+                content = parsed.html || parsed.content || JSON.stringify(parsed);
+            } else {
+                // Fallback: try to get content from data or item directly
+                content = (item.data && item.data.content) || item.content || '';
+            }
+
+            logEvent('render', 'Rendering content: ' + content.substring(0, 80) + (content.length > 80 ? '…' : ''));
+
+            // Determine which experience was assigned
+            if (content.indexOf('Experience A') !== -1) {
+                assignedExperience = 'A';
+            } else if (content.indexOf('Experience B') !== -1) {
+                assignedExperience = 'B';
+            } else {
+                assignedExperience = 'Unknown';
+            }
+
+            // Render into the live experience area
+            liveEl.className = 'live-experience loaded';
+            liveEl.innerHTML = `
+                <div class="exp-title">Experience Delivered by Adobe Target</div>
+                <div class="exp-rendered">${content}</div>
+            `;
+
+            // Highlight the matching experience card
+            const cardA = document.getElementById('card-exp-a');
+            const cardB = document.getElementById('card-exp-b');
+            if (assignedExperience === 'A') {
+                cardA.classList.add('active');
+                cardB.classList.add('inactive');
+            } else if (assignedExperience === 'B') {
+                cardA.classList.add('inactive');
+                cardB.classList.add('active');
+            }
+
+            // Update proposition details table
+            updatePropositionDetails(proposition);
+
+            logEvent('rendered', 'Experience ' + assignedExperience + ' rendered successfully');
+
+            // Step 3: Send display event
+            sendDisplayEvent(proposition);
+        }
+
+        // ── Step 3: Record Display Event ──
+        function sendDisplayEvent(proposition) {
+            if (!proposition) {
+                logEvent('error', 'No proposition to send display event for');
+                return;
+            }
+
+            const { id, scope, scopeDetails = {} } = proposition;
+
+            alloy("sendEvent", {
+                xdm: {
+                    eventType: "decisioning.propositionDisplay",
+                    _experience: {
+                        decisioning: {
+                            propositions: [{
+                                id: id,
+                                scope: scope,
+                                scopeDetails: scopeDetails
+                            }],
+                            propositionEventType: {
+                                display: 1
+                            }
+                        }
+                    }
+                }
+            }).then(function(result) {
+                console.log("Display event sent:", result);
+                displayEventSent = true;
+                logEvent('display', 'propositionDisplay event sent for scope: ' + scope);
+            }).catch(function(error) {
+                console.error("Display event error:", error);
+                logEvent('error', 'Display event failed: ' + error.message);
+            });
+        }
+
+        // ── Send Interact Event ──
+        function sendInteractEvent() {
+            if (!currentProposition) {
+                logEvent('error', 'No proposition to interact with — request an experience first');
+                alert('No experience loaded. Click "Request A/B Experience" first.');
+                return;
+            }
+
+            const { id, scope, scopeDetails = {} } = currentProposition;
+
+            alloy("sendEvent", {
+                xdm: {
+                    eventType: "decisioning.propositionInteract",
+                    _experience: {
+                        decisioning: {
+                            propositions: [{
+                                id: id,
+                                scope: scope,
+                                scopeDetails: scopeDetails
+                            }],
+                            propositionEventType: {
+                                interact: 1
+                            },
+                            propositionAction: {
+                                label: "ab-test-click"
+                            }
+                        }
+                    }
+                }
+            }).then(function(result) {
+                console.log("Interact event sent:", result);
+                interactEventSent = true;
+                logEvent('interact', 'propositionInteract event sent — label: ab-test-click');
+            }).catch(function(error) {
+                console.error("Interact event error:", error);
+                logEvent('error', 'Interact event failed: ' + error.message);
+            });
+        }
+
+        // ── Send Conversion Event (Goal Metric) ──
+        function sendConversionEvent() {
+            if (!currentProposition) {
+                logEvent('error', 'No active experience — request first');
+                alert('No experience loaded. Click "Request A/B Experience" first.');
+                return;
+            }
+
+            alloy("sendEvent", {
+                xdm: {
+                    eventType: "commerce.purchases",
+                    commerce: {
+                        purchases: { value: 1 },
+                        order: {
+                            purchaseID: "AB-" + Date.now(),
+                            currencyCode: "USD",
+                            priceTotal: 49.99
+                        }
+                    },
+                    web: {
+                        webPageDetails: {
+                            URL: window.location.href,
+                            name: document.title
+                        }
+                    }
+                }
+            }).then(function(result) {
+                console.log("Conversion event sent:", result);
+                logEvent('conversion', 'Conversion event sent (commerce.purchases) for Experience ' + assignedExperience);
+            }).catch(function(error) {
+                logEvent('error', 'Conversion event failed: ' + error.message);
+            });
+        }
+
+        // ── Show "no proposition" state ──
+        function showNoProposition() {
+            const liveEl = document.getElementById('live-experience');
+            liveEl.className = 'live-experience';
+            liveEl.innerHTML = `
+                <div class="exp-title">No Experience Returned</div>
+                <div class="exp-rendered" style="color:#888;font-size:0.9rem;">
+                    No proposition returned for scope <strong>wz_ab_exp1</strong>.<br>
+                    Ensure the A/B activity is configured and active in Adobe Target.
+                </div>
+            `;
+        }
+
+        // ── Update proposition details table ──
+        function updatePropositionDetails(prop) {
+            const tbody = document.getElementById('prop-details-body');
+            if (!prop) {
+                tbody.innerHTML = '<tr><td colspan="2" style="color:#555;text-align:center;padding:1rem;">No proposition data yet</td></tr>';
+                return;
+            }
+            const item = prop.items && prop.items[0] ? prop.items[0] : {};
+            const sd = prop.scopeDetails || {};
+            tbody.innerHTML = `
+                <tr><td>Proposition ID</td><td>${prop.id || '—'}</td></tr>
+                <tr><td>Scope</td><td>${prop.scope || '—'}</td></tr>
+                <tr><td>Activity ID</td><td>${sd.activity ? sd.activity.id : (sd.decisionProvider || '—')}</td></tr>
+                <tr><td>Experience ID</td><td>${sd.experience ? sd.experience.id : '—'}</td></tr>
+                <tr><td>Item Schema</td><td>${item.schema || '—'}</td></tr>
+                <tr><td>Decision Provider</td><td>${sd.decisionProvider || '—'}</td></tr>
+                <tr><td>Correlating ID</td><td>${sd.correlationID || '—'}</td></tr>
+            `;
+        }
+
+        // ── Auto-fetch on page load ──
+        window.addEventListener('load', function() {
+            logEvent('init', 'Alloy Web SDK configured — datastreamId: f50c86ad…, orgId: B504732B…');
+            logEvent('consent', 'Consent set: collect.val = "y"');
+            requestABTest();
+        });
+    </script>
+</head>
+<body>
+
+<div class="page-header">
+    <h1>🔬 A/B Test <span class="badge">Manual</span></h1>
+    <p>Live A/B test powered by Adobe Target via the Web SDK. The experience is resolved by Target using the <code style="background:rgba(0,0,0,0.3);padding:0.15rem 0.4rem;border-radius:4px;font-size:0.9rem;">wz_ab_exp1</code> activity location.</p>
+    <div class="breadcrumb">
+        <a href="index.html">Home</a><span>/</span>
+        <a href="target-activities.html">Target Activities</a><span>/</span>
+        <span style="color:rgba(255,255,255,0.9);">A/B Test</span>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- What is it -->
+    <div class="section">
+        <h2>What is an A/B Test?</h2>
+        <p>An A/B test (or split test) compares two or more versions of a page element to see which performs better against a specified goal metric. Traffic is randomly split between variations, and statistical analysis determines the winner.</p>
+        <div class="info-grid">
+            <div class="info-box">
+                <h4>When to Use</h4>
+                <ul>
+                    <li>Testing new page layouts or designs</li>
+                    <li>Comparing CTA copy or button colors</li>
+                    <li>Validating hypothesis-driven changes</li>
+                    <li>When you need clean statistical proof</li>
+                </ul>
+            </div>
+            <div class="info-box">
+                <h4>Key Characteristics</h4>
+                <ul>
+                    <li>Even traffic split (configurable)</li>
+                    <li>Requires sufficient sample size</li>
+                    <li>Manual winner declaration</li>
+                    <li>Supports up to 5 experiences + control</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- How it works -->
+    <div class="section">
+        <h2>How It Works</h2>
+        <div class="how-it-works">
+            <div class="step"><div class="step-num">1</div><div class="step-label">sendEvent with decisionScopes</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-label">Target resolves activity & experience</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-label">Proposition returned to browser</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-label">Manually render content</div></div>
+            <div class="step"><div class="step-num">5</div><div class="step-label">Send propositionDisplay event</div></div>
+            <div class="step"><div class="step-num">6</div><div class="step-label">Track interactions & conversions</div></div>
+        </div>
+    </div>
+
+    <!-- SDK Configuration -->
+    <div class="section">
+        <h2>⚙️ Web SDK Configuration</h2>
+        <p>This page uses the same Alloy Web SDK configuration as the code-based experiences demo. Propositions are fetched with <code>renderDecisions: false</code> and manually rendered.</p>
+        <div class="config-block">
+            <span class="comment">// Alloy Web SDK v2.19.1</span><br>
+            alloy("<span class="key">configure</span>", {<br>
+            &nbsp;&nbsp;<span class="key">datastreamId</span>: "<span class="val">f50c86ad-a830-4068-a224-a7548d3c3f8d</span>",<br>
+            &nbsp;&nbsp;<span class="key">orgId</span>: "<span class="val">B504732B5D3B2A790A495ECF@AdobeOrg</span>"<br>
+            });<br><br>
+            alloy("<span class="key">sendEvent</span>", {<br>
+            &nbsp;&nbsp;<span class="key">renderDecisions</span>: <span class="val">false</span>,<br>
+            &nbsp;&nbsp;<span class="key">personalization</span>: {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="key">decisionScopes</span>: ["<span class="val">wz_ab_exp1</span>"]<br>
+            &nbsp;&nbsp;}<br>
+            });
+        </div>
+    </div>
+
+    <!-- Live Demo -->
+    <div class="section">
+        <h2>🧪 Live A/B Test — wz_ab_exp1</h2>
+        <p>The experience below is resolved by Adobe Target. On page load, the Web SDK requests the <strong>wz_ab_exp1</strong> decision scope, receives a proposition, and renders the assigned experience manually.</p>
+
+        <div class="demo-area">
+            <h3>▶ Experience Delivery</h3>
+
+            <!-- Live rendered experience -->
+            <div class="live-experience" id="live-experience">
+                <div class="exp-title">Requesting Experience from Adobe Target…</div>
+                <div class="loading-spinner"></div>
+            </div>
+
+            <!-- Side-by-side experience cards -->
+            <div class="experience-container">
+                <div class="experience-card" id="card-exp-a">
+                    <div class="exp-label">Experience A</div>
+                    <div class="exp-content">&lt;p&gt;Experience A for a/b test&lt;/p&gt;</div>
+                </div>
+                <div class="experience-card" id="card-exp-b">
+                    <div class="exp-label">Experience B</div>
+                    <div class="exp-content">&lt;p&gt;Experience B for a/b test&lt;/p&gt;</div>
+                </div>
+            </div>
+
+            <!-- Proposition details -->
+            <div class="proposition-details">
+                <h4>📋 Proposition Details</h4>
+                <table class="prop-table">
+                    <tbody id="prop-details-body">
+                        <tr><td colspan="2" style="color:#555;text-align:center;padding:1rem;">No proposition data yet</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="requestABTest()">🔄 Request A/B Experience</button>
+                <button class="btn btn-success" onclick="sendInteractEvent()">👆 Send Interact Event</button>
+                <button class="btn btn-secondary" onclick="sendConversionEvent()">💳 Send Conversion Event</button>
+                <button class="btn btn-secondary" onclick="sendDisplayEventManual()">👁️ Re-send Display Event</button>
+            </div>
+
+            <!-- Event Log -->
+            <div class="log" id="log"><div class="log-entry"><em>Initializing Web SDK…</em></div></div>
+        </div>
+    </div>
+
+</div>
+
+<footer>
+    <a href="index.html">← All Demos</a> · <a href="target-activities.html">Target Activities</a> · <a href="code-based-experiences.html">Code-Based Experiences</a> ·
+    <a href="https://experienceleague.adobe.com/en/docs/experience-platform/collection/use-cases/personalization/render-manual-propositions" target="_blank" rel="noopener">Manual Propositions Docs ↗</a> ·
+    <a href="https://experienceleague.adobe.com/en/docs/target/using/activities/abtest/test-ab" target="_blank" rel="noopener">A/B Test Docs ↗</a>
+</footer>
+
+<script>
+    // Manual re-send display event button handler
+    function sendDisplayEventManual() {
+        if (!currentProposition) {
+            logEvent('error', 'No proposition — request an experience first');
+            alert('No experience loaded. Click "Request A/B Experience" first.');
+            return;
+        }
+        sendDisplayEvent(currentProposition);
+    }
+</script>
+</body>
+</html>

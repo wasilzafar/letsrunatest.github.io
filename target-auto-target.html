@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto-Target Demo — Adobe Target | Let's Run a Test</title>
+    <link rel="stylesheet" href="styles/common.css">
+    <style>
+        :root{--accent:#7c3aed;--accent-dark:#5b21b6;--accent-light:#a78bfa;--accent-shadow:rgba(124,58,237,0.4)}
+
+        /* Visitor profile */
+        .visitor-panel{display:flex;gap:1.5rem;margin-bottom:1.5rem;flex-wrap:wrap}
+        .visitor-card{flex:1;min-width:280px;background:rgba(255,255,255,0.04);border-radius:12px;padding:1.25rem;border:2px solid transparent;transition:all 0.3s}
+        .visitor-card.active{border-color:#7c3aed;background:rgba(124,58,237,0.08)}
+        .visitor-top{display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem}
+        .visitor-avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#ec4899);display:flex;align-items:center;justify-content:center;font-size:1.5rem}
+        .visitor-name{font-weight:700;font-size:1rem;color:#fff}
+        .visitor-type{font-size:0.78rem;color:#888}
+        .traits{display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.5rem}
+        .trait{font-size:0.72rem;padding:0.2rem 0.5rem;border-radius:4px;background:rgba(255,255,255,0.08);color:#bbb}
+        .trait.strong{background:rgba(124,58,237,0.2);color:#a78bfa;border:1px solid rgba(124,58,237,0.3)}
+
+        /* Experience cards */
+        .exp-row{display:flex;gap:1rem;margin:1rem 0;flex-wrap:wrap}
+        .exp-card{flex:1;min-width:180px;background:rgba(255,255,255,0.04);border:2px solid transparent;border-radius:12px;padding:1.25rem;text-align:center;transition:all 0.5s;position:relative}
+        .exp-card.matched{border-color:#4ade80;background:rgba(74,222,128,0.06);transform:scale(1.03)}
+        .exp-card.matched::after{content:"✓ Best Match";position:absolute;top:-10px;right:10px;background:#4ade80;color:#000;padding:0.15rem 0.5rem;border-radius:4px;font-size:0.7rem;font-weight:700}
+        .exp-card.dimmed{opacity:0.4}
+        .exp-name{font-weight:700;font-size:0.9rem;color:#ddd;margin-bottom:0.25rem}
+        .exp-desc{font-size:0.78rem;color:#888}
+        .exp-icon{font-size:2rem;margin-bottom:0.5rem}
+        .conf-meter{margin-top:0.75rem}
+        .conf-label{font-size:0.72rem;color:#888;margin-bottom:0.25rem}
+        .conf-track{height:8px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden}
+        .conf-fill{height:100%;border-radius:4px;transition:width 0.8s;background:linear-gradient(90deg,#fbbf24,#4ade80)}
+        .conf-val{font-size:0.8rem;font-weight:700;color:#4ade80;margin-top:0.2rem}
+
+        /* ML factors */
+        .ml-factors{background:rgba(255,255,255,0.03);border-radius:10px;padding:1rem;margin:1rem 0}
+        .ml-factors h4{font-size:0.82rem;color:#a78bfa;margin-bottom:0.5rem}
+        .factor-row{display:flex;align-items:center;gap:0.5rem;padding:0.35rem 0;font-size:0.8rem;color:#aaa}
+        .factor-bar{flex:1;height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;max-width:150px}
+        .factor-fill{height:100%;border-radius:3px;background:#7c3aed;transition:width 0.5s}
+        .factor-name{min-width:100px}
+        .factor-impact{min-width:40px;text-align:right;color:#a78bfa;font-weight:600;font-size:0.75rem}
+        @media(max-width:768px){.visitor-panel{flex-direction:column}.exp-row{flex-direction:column}}
+    </style>
+</head>
+<body>
+
+<div class="page-header">
+    <h1>🤖 Auto-Target <span class="badge">ML-Powered</span></h1>
+    <p>Uses Adobe Sensei machine learning to select the best experience for each individual visitor — personalization at scale without manual rules.</p>
+    <div class="breadcrumb">
+        <a href="index.html">Home</a><span>/</span>
+        <a href="target-activities.html">Target Activities</a><span>/</span>
+        <span style="color:rgba(255,255,255,0.9);">Auto-Target</span>
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="section">
+        <h2>What is Auto-Target?</h2>
+        <p>Auto-Target uses advanced machine learning (Random Forest models) to evaluate each visitor's profile attributes and predict which of several experiences will maximize the chosen success metric for that individual. Unlike A/B tests that find one winner for everyone, Auto-Target finds the best experience <em>per visitor</em>.</p>
+        <div class="info-grid">
+            <div class="info-box">
+                <h4>When to Use</h4>
+                <ul>
+                    <li>You have multiple distinct experiences</li>
+                    <li>Your audience is diverse with different preferences</li>
+                    <li>You want 1:1 personalization without manual rules</li>
+                    <li>You have enough traffic for ML to learn (1,000+ visitors/variant)</li>
+                </ul>
+            </div>
+            <div class="info-box">
+                <h4>Key Characteristics</h4>
+                <ul>
+                    <li>Random Forest ML model (Adobe Sensei)</li>
+                    <li>Considers 40+ visitor attributes</li>
+                    <li>Continuously learns and adapts</li>
+                    <li>Exploration vs. exploitation balance</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>How It Works</h2>
+        <div class="how-it-works">
+            <div class="step"><div class="step-num">1</div><div class="step-label">Marketer creates multiple experiences</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-label">ML observes visitor attributes</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-label">Random Forest predicts best match</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-label">Visitor sees optimal experience</div></div>
+            <div class="step"><div class="step-num">5</div><div class="step-label">Model refines with each interaction</div></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>🧪 Live Demo — ML Visitor-to-Experience Matching</h2>
+        <p>Generate visitors with different profiles and watch the ML model score each experience. The model uses traits like device, age, spend level, and interests to predict the best match.</p>
+
+        <div class="demo-area">
+            <h3>▶ Current Visitor</h3>
+            <div class="visitor-panel">
+                <div class="visitor-card active" id="visitorCard">
+                    <div class="visitor-top">
+                        <div class="visitor-avatar" id="vAvatar">👤</div>
+                        <div><div class="visitor-name" id="vName">No visitor yet</div><div class="visitor-type" id="vType">Click generate below</div></div>
+                    </div>
+                    <div class="traits" id="vTraits"><span class="trait">Awaiting visitor…</span></div>
+                </div>
+                <div class="ml-factors" id="mlFactors">
+                    <h4>🧠 ML Model — Top Scoring Factors</h4>
+                    <div id="factorsList"><div class="factor-row" style="color:#666">Generate a visitor to see ML factors</div></div>
+                </div>
+            </div>
+
+            <h3>▶ Experience Scoring</h3>
+            <div class="exp-row" id="expRow">
+                <div class="exp-card" id="exp-premium"><div class="exp-icon">💎</div><div class="exp-name">Premium</div><div class="exp-desc">Luxury items, exclusive access</div><div class="conf-meter"><div class="conf-label">ML Score</div><div class="conf-track"><div class="conf-fill" id="conf-premium" style="width:0%"></div></div><div class="conf-val" id="val-premium">—</div></div></div>
+                <div class="exp-card" id="exp-value"><div class="exp-icon">💰</div><div class="exp-name">Value</div><div class="exp-desc">Best deals, coupons, bulk savings</div><div class="conf-meter"><div class="conf-label">ML Score</div><div class="conf-track"><div class="conf-fill" id="conf-value" style="width:0%"></div></div><div class="conf-val" id="val-value">—</div></div></div>
+                <div class="exp-card" id="exp-trendy"><div class="exp-icon">🔥</div><div class="exp-name">Trending</div><div class="exp-desc">Hot products, social proof, new drops</div><div class="conf-meter"><div class="conf-label">ML Score</div><div class="conf-track"><div class="conf-fill" id="conf-trendy" style="width:0%"></div></div><div class="conf-val" id="val-trendy">—</div></div></div>
+                <div class="exp-card" id="exp-seasonal"><div class="exp-icon">🎄</div><div class="exp-name">Seasonal</div><div class="exp-desc">Holiday themes, gift guides, events</div><div class="conf-meter"><div class="conf-label">ML Score</div><div class="conf-track"><div class="conf-fill" id="conf-seasonal" style="width:0%"></div></div><div class="conf-val" id="val-seasonal">—</div></div></div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat"><div class="val" id="totalGen">0</div><div class="lbl">Visitors Generated</div></div>
+                <div class="stat"><div class="val" id="premiumWins">0</div><div class="lbl">Premium Matches</div></div>
+                <div class="stat"><div class="val" id="valueWins">0</div><div class="lbl">Value Matches</div></div>
+                <div class="stat"><div class="val" id="trendyWins">0</div><div class="lbl">Trending Matches</div></div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="generateVisitor()">👤 Generate Random Visitor</button>
+                <button class="btn btn-primary" onclick="generateBatch()">👥 Generate 10 Visitors</button>
+                <button class="btn btn-danger" onclick="resetDemo()">↺ Reset</button>
+            </div>
+
+            <div class="log" id="log"><div class="log-entry"><em>Generate visitors to see ML experience matching…</em></div></div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <a href="index.html">← All Demos</a> · <a href="target-activities.html">Target Activities</a> ·
+    <a href="https://experienceleague.adobe.com/en/docs/target/using/activities/auto-target/auto-target-to-optimize" target="_blank" rel="noopener">Official Docs ↗</a>
+</footer>
+
+<script src="scripts/log.js"></script>
+<script>
+const visitors = [
+    {name:'Sarah K.',avatar:'👩',type:'High-Value Shopper',traits:['High Income','Brand Loyal','Desktop','Urban','Age 28-35','Repeat Buyer'],strong:['High Income','Brand Loyal'],scores:{premium:94,value:18,trendy:42,seasonal:35},factors:[{n:'Income Level',v:95},{n:'Brand Affinity',v:88},{n:'Avg Order Value',v:82},{n:'Device Type',v:45},{n:'Geo Location',v:60}]},
+    {name:'Mike R.',avatar:'👨',type:'Budget Conscious',traits:['Price Sensitive','Coupon User','Mobile','Suburban','Age 35-45','Weekly Visitor'],strong:['Price Sensitive','Coupon User'],scores:{premium:12,value:96,trendy:28,seasonal:40},factors:[{n:'Coupon Usage',v:92},{n:'Price Sensitivity',v:90},{n:'Visit Frequency',v:75},{n:'Cart Abandonment',v:68},{n:'Device Type',v:40}]},
+    {name:'Zoe L.',avatar:'👩‍🎤',type:'Trend Follower',traits:['Gen Z','Instagram Ads','Mobile','Urban','Age 18-24','Social Referral'],strong:['Gen Z','Instagram Ads'],scores:{premium:22,value:25,trendy:97,seasonal:48},factors:[{n:'Social Referral',v:95},{n:'Age Group',v:88},{n:'Content Engagement',v:82},{n:'Mobile Usage',v:78},{n:'Time on Site',v:55}]},
+    {name:'James W.',avatar:'🧔',type:'Loyal Premium Member',traits:['VIP Tier','High LTV','Tablet','Rural','Age 45-55','10+ Purchases'],strong:['VIP Tier','High LTV'],scores:{premium:90,value:30,trendy:15,seasonal:52},factors:[{n:'Loyalty Tier',v:96},{n:'Lifetime Value',v:92},{n:'Purchase History',v:85},{n:'Engagement Score',v:70},{n:'Device Type',v:35}]},
+    {name:'Priya M.',avatar:'👩‍💻',type:'Research Shopper',traits:['Tech Savvy','Newsletter Sub','Desktop','Urban','Age 30-38','Comparison Shopper'],strong:['Tech Savvy','Comparison Shopper'],scores:{premium:45,value:78,trendy:55,seasonal:30},factors:[{n:'Page Depth',v:88},{n:'Search Queries',v:82},{n:'Time on Site',v:78},{n:'Newsletter Engagement',v:72},{n:'Category Views',v:65}]},
+    {name:'Alex T.',avatar:'🧑‍🎓',type:'Student Shopper',traits:['Student','TikTok Ads','Mobile','Suburban','Age 18-22','New Visitor'],strong:['Student','TikTok Ads'],scores:{premium:8,value:42,trendy:92,seasonal:55},factors:[{n:'Referral Source',v:90},{n:'Age Group',v:85},{n:'Session Duration',v:60},{n:'Page Views',v:55},{n:'Geo Location',v:40}]},
+    {name:'Karen B.',avatar:'👩‍🦰',type:'Holiday Shopper',traits:['Gift Buyer','Email Click','Desktop','Suburban','Age 40-50','Seasonal'],strong:['Gift Buyer','Seasonal'],scores:{premium:35,value:45,trendy:20,seasonal:93},factors:[{n:'Seasonal Patterns',v:94},{n:'Gift Category Views',v:88},{n:'Email Engagement',v:80},{n:'Calendar Timing',v:75},{n:'Past Purchases',v:65}]},
+    {name:'David C.',avatar:'👨‍💼',type:'Corporate Buyer',traits:['Business Account','Bulk Orders','Desktop','Urban','Age 35-50','B2B'],strong:['Business Account','Bulk Orders'],scores:{premium:70,value:85,trendy:10,seasonal:28},factors:[{n:'Account Type',v:92},{n:'Order Volume',v:88},{n:'Invoice Usage',v:82},{n:'Weekday Activity',v:75},{n:'Category Focus',v:68}]},
+];
+
+let stats = {total:0,premium:0,value:0,trendy:0,seasonal:0};
+const exps = ['premium','value','trendy','seasonal'];
+
+function generateVisitor() {
+    const v = visitors[Math.floor(Math.random()*visitors.length)];
+    // Add slight randomness to scores
+    const scores = {};
+    exps.forEach(e => scores[e] = Math.max(0, Math.min(100, v.scores[e] + Math.floor(Math.random()*10-5))));
+
+    // Update visitor card
+    document.getElementById('vAvatar').textContent = v.avatar;
+    document.getElementById('vName').textContent = v.name;
+    document.getElementById('vType').textContent = v.type;
+    document.getElementById('vTraits').innerHTML = v.traits.map(t =>
+        `<span class="trait ${v.strong.includes(t)?'strong':''}">${t}</span>`
+    ).join('');
+
+    // ML factors
+    document.getElementById('factorsList').innerHTML = v.factors.map(f =>
+        `<div class="factor-row"><span class="factor-name">${f.n}</span><div class="factor-bar"><div class="factor-fill" style="width:${f.v}%"></div></div><span class="factor-impact">${f.v}%</span></div>`
+    ).join('');
+
+    // Score experiences
+    let best = exps[0], bestScore = 0;
+    exps.forEach(e => {
+        document.getElementById('conf-'+e).style.width = scores[e]+'%';
+        document.getElementById('val-'+e).textContent = scores[e]+'%';
+        document.getElementById('exp-'+e).classList.remove('matched','dimmed');
+        if (scores[e] > bestScore) { bestScore = scores[e]; best = e; }
+    });
+
+    setTimeout(() => {
+        exps.forEach(e => {
+            if (e === best) document.getElementById('exp-'+e).classList.add('matched');
+            else document.getElementById('exp-'+e).classList.add('dimmed');
+        });
+    }, 300);
+
+    stats.total++;
+    stats[best]++;
+    updateStats();
+    logMsg('match', `${v.name} (${v.type}) → ${best.charAt(0).toUpperCase()+best.slice(1)} experience (${bestScore}% confidence)`);
+}
+
+function generateBatch() {
+    let i = 0;
+    const interval = setInterval(() => {
+        generateVisitor();
+        i++;
+        if (i >= 10) clearInterval(interval);
+    }, 300);
+}
+
+function updateStats() {
+    document.getElementById('totalGen').textContent = stats.total;
+    document.getElementById('premiumWins').textContent = stats.premium;
+    document.getElementById('valueWins').textContent = stats.value;
+    document.getElementById('trendyWins').textContent = stats.trendy;
+}
+
+function resetDemo() {
+    stats = {total:0,premium:0,value:0,trendy:0,seasonal:0};
+    updateStats();
+    exps.forEach(e => {
+        document.getElementById('conf-'+e).style.width = '0%';
+        document.getElementById('val-'+e).textContent = '—';
+        document.getElementById('exp-'+e).classList.remove('matched','dimmed');
+    });
+    document.getElementById('vAvatar').textContent = '👤';
+    document.getElementById('vName').textContent = 'No visitor yet';
+    document.getElementById('vType').textContent = 'Click generate below';
+    document.getElementById('vTraits').innerHTML = '<span class="trait">Awaiting visitor…</span>';
+    document.getElementById('factorsList').innerHTML = '<div class="factor-row" style="color:#666">Generate a visitor to see ML factors</div>';
+    document.getElementById('log').innerHTML = '<div class="log-entry"><em>Reset. Generate visitors to see ML matching…</em></div>';
+}
+
+</script>
+</body>
+</html>

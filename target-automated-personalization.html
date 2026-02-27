@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automated Personalization (AP) Demo — Adobe Target | Let's Run a Test</title>
+    <link rel="stylesheet" href="styles/common.css">
+    <style>
+        :root{--accent:#a855f7;--accent-dark:#7e22ce;--accent-light:#c084fc;--accent-shadow:rgba(168,85,247,0.4)}
+
+        /* Visitor generator */
+        .visitor-gen{display:flex;gap:1.5rem;margin-bottom:1.5rem;flex-wrap:wrap;align-items:flex-start}
+        .visitor-profile{flex:1;min-width:240px;background:rgba(255,255,255,0.04);border-radius:12px;padding:1.25rem;border:2px solid rgba(168,85,247,0.2)}
+        .vp-header{display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem}
+        .vp-avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#a855f7,#ec4899);display:flex;align-items:center;justify-content:center;font-size:1.8rem}
+        .vp-name{font-weight:700;font-size:1.1rem;color:#fff}
+        .vp-segment{font-size:0.78rem;color:#c084fc}
+        .vp-attrs{display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.5rem}
+        .vp-attr{font-size:0.72rem;padding:0.2rem 0.5rem;border-radius:4px;background:rgba(255,255,255,0.08);color:#bbb}
+        .vp-attr.key{background:rgba(168,85,247,0.2);color:#c084fc;border:1px solid rgba(168,85,247,0.3)}
+
+        /* Offer pool */
+        .offers-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;margin:1rem 0}
+        .offer{background:rgba(255,255,255,0.04);border:2px solid transparent;border-radius:12px;padding:1rem;text-align:center;transition:all 0.5s;position:relative}
+        .offer.matched{border-color:#4ade80;background:rgba(74,222,128,0.06);transform:scale(1.02)}
+        .offer.matched::before{content:"★ MATCHED";position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:#4ade80;color:#000;padding:0.1rem 0.45rem;border-radius:4px;font-size:0.65rem;font-weight:700}
+        .offer.dimmed{opacity:0.3}
+        .offer-icon{font-size:2rem;margin-bottom:0.4rem}
+        .offer-name{font-weight:700;font-size:0.85rem;color:#ddd}
+        .offer-desc{font-size:0.75rem;color:#888;margin-top:0.2rem}
+        .offer-score{margin-top:0.5rem;font-size:0.7rem;color:#888}
+        .offer-score .score-val{font-weight:700;font-size:0.85rem;color:#c084fc}
+
+        /* RF model viz */
+        .model-viz{background:rgba(255,255,255,0.03);border-radius:10px;padding:1rem;margin:1rem 0}
+        .model-viz h4{font-size:0.82rem;color:#c084fc;margin-bottom:0.75rem}
+        .tree-row{display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;font-size:0.78rem}
+        .tree-branch{width:16px;height:16px;border-radius:50%;background:#a855f7;display:flex;align-items:center;justify-content:center;font-size:0.6rem;color:#fff;flex-shrink:0}
+        .tree-text{color:#aaa}
+        .tree-result{margin-left:auto;color:#c084fc;font-weight:600}
+
+        @media(max-width:768px){.offers-grid{grid-template-columns:repeat(2,1fr)}}
+    </style>
+</head>
+<body>
+
+<div class="page-header">
+    <h1>🧠 Automated Personalization <span class="badge">Random Forest</span></h1>
+    <p>Uses Adobe Sensei Random Forest models to match the best offer to each visitor from a pool of content — combining the best of machine learning with marketer-curated content.</p>
+    <div class="breadcrumb">
+        <a href="index.html">Home</a><span>/</span>
+        <a href="target-activities.html">Target Activities</a><span>/</span>
+        <span style="color:rgba(255,255,255,0.9);">Automated Personalization</span>
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="section">
+        <h2>What is Automated Personalization (AP)?</h2>
+        <p>AP combines offers and messaging you create, then uses machine learning (Random Forest) to determine which combination works best for each visitor based on their individual profile. Unlike Auto-Target which chooses between full experiences, AP mixes and matches individual offers to create personalized combinations.</p>
+        <div class="info-grid">
+            <div class="info-box">
+                <h4>When to Use</h4>
+                <ul>
+                    <li>You have a pool of content/offers to personalize</li>
+                    <li>You want 1:many offer-to-visitor matching</li>
+                    <li>High traffic pages with diverse audiences</li>
+                    <li>Product pages, homepages, landing pages</li>
+                </ul>
+            </div>
+            <div class="info-box">
+                <h4>Key Characteristics</h4>
+                <ul>
+                    <li>Random Forest model per offer</li>
+                    <li>Individual visitor profile matching</li>
+                    <li>Content pool approach (mix & match)</li>
+                    <li>10% holdout control group</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>How It Works</h2>
+        <div class="how-it-works">
+            <div class="step"><div class="step-num">1</div><div class="step-label">Add offers to content pool</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-label">Visitor arrives with profile</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-label">Random Forest scores each offer</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-label">Best scored offers shown</div></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>🧪 Live Demo — Offer-to-Visitor Matching</h2>
+        <p>Generate random visitor profiles and watch the Random Forest model score each offer in the pool. The top-scoring offers are highlighted as matches for that visitor.</p>
+
+        <div class="demo-area">
+            <h3>▶ Current Visitor Profile</h3>
+            <div class="visitor-gen">
+                <div class="visitor-profile" id="visitorProfile">
+                    <div class="vp-header">
+                        <div class="vp-avatar" id="vpAvatar">👤</div>
+                        <div><div class="vp-name" id="vpName">Generate a visitor</div><div class="vp-segment" id="vpSegment">Click the button below</div></div>
+                    </div>
+                    <div class="vp-attrs" id="vpAttrs"><span class="vp-attr">Awaiting visitor generation…</span></div>
+                </div>
+                <div class="model-viz" id="modelViz" style="flex:1;min-width:240px">
+                    <h4>🌲 Random Forest Decision Path</h4>
+                    <div id="treePath"><div class="tree-row" style="color:#666">Generate a visitor to see the decision path</div></div>
+                </div>
+            </div>
+
+            <h3>▶ Offer Pool (6 offers — top 2 matched per visitor)</h3>
+            <div class="offers-grid" id="offersGrid">
+                <div class="offer" id="offer-0"><div class="offer-icon">🏷️</div><div class="offer-name">20% Off First Order</div><div class="offer-desc">Welcome discount for new shoppers</div><div class="offer-score">RF Score: <span class="score-val" id="score-0">—</span></div></div>
+                <div class="offer" id="offer-1"><div class="offer-icon">🚀</div><div class="offer-name">Free Express Shipping</div><div class="offer-desc">Get it tomorrow, on us</div><div class="offer-score">RF Score: <span class="score-val" id="score-1">—</span></div></div>
+                <div class="offer" id="offer-2"><div class="offer-icon">🎁</div><div class="offer-name">Free Gift with Purchase</div><div class="offer-desc">Mystery gift on orders $50+</div><div class="offer-score">RF Score: <span class="score-val" id="score-2">—</span></div></div>
+                <div class="offer" id="offer-3"><div class="offer-icon">💳</div><div class="offer-name">Buy Now, Pay Later</div><div class="offer-desc">Split into 4 interest-free payments</div><div class="offer-score">RF Score: <span class="score-val" id="score-3">—</span></div></div>
+                <div class="offer" id="offer-4"><div class="offer-icon">⭐</div><div class="offer-name">Loyalty Double Points</div><div class="offer-desc">Earn 2x points on every purchase</div><div class="offer-score">RF Score: <span class="score-val" id="score-4">—</span></div></div>
+                <div class="offer" id="offer-5"><div class="offer-icon">🔔</div><div class="offer-name">Price Drop Alert</div><div class="offer-desc">Get notified when items go on sale</div><div class="offer-score">RF Score: <span class="score-val" id="score-5">—</span></div></div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat"><div class="val" id="sTotal">0</div><div class="lbl">Visitors Scored</div></div>
+                <div class="stat"><div class="val" id="sTopOffer">—</div><div class="lbl">Most Matched Offer</div></div>
+                <div class="stat"><div class="val" id="sAvgScore">—</div><div class="lbl">Avg Winner Score</div></div>
+                <div class="stat"><div class="val" id="sPersonalized">0%</div><div class="lbl">Personalized</div></div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="generateVisitor()">👤 Generate Visitor</button>
+                <button class="btn btn-primary" onclick="generateBatch()">👥 Generate 10 Visitors</button>
+                <button class="btn btn-danger" onclick="resetDemo()">↺ Reset</button>
+            </div>
+
+            <div class="log" id="log"><div class="log-entry"><em>Generate visitors to see Random Forest offer matching…</em></div></div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <a href="index.html">← All Demos</a> · <a href="target-activities.html">Target Activities</a> ·
+    <a href="https://experienceleague.adobe.com/en/docs/target/using/activities/automated-personalization/automated-personalization" target="_blank" rel="noopener">Official Docs ↗</a>
+</footer>
+
+<script src="scripts/log.js"></script>
+<script>
+const profiles = [
+    {name:'Emma S.',avatar:'👩‍💼',segment:'New × High Intent',attrs:['New Visitor','High Income','Desktop','Direct Traffic','Urban','Cart $120'],keyAttrs:['New Visitor','High Income'],offerWeights:[0.92,0.55,0.78,0.40,0.25,0.35],tree:['Income > $80k? → Yes','New visitor? → Yes','Cart value > $100? → Yes','→ Offer: 20% Off + Gift']},
+    {name:'Carlos R.',avatar:'👨',segment:'Returning × Budget',attrs:['Returning','Price Sensitive','Mobile','Social Referral','Suburban','Cart $35'],keyAttrs:['Price Sensitive','Social Referral'],offerWeights:[0.55,0.38,0.30,0.95,0.42,0.85],tree:['Price sensitivity > 70%? → Yes','Mobile user? → Yes','Cart < $50? → Yes','→ Offer: BNPL + Price Drop']},
+    {name:'Yuki T.',avatar:'👩‍🎨',segment:'Loyal × Engaged',attrs:['VIP Member','Frequent Buyer','Tablet','Email Click','Urban','Cart $85'],keyAttrs:['VIP Member','Frequent Buyer'],offerWeights:[0.30,0.78,0.65,0.35,0.96,0.40],tree:['Loyalty tier = VIP? → Yes','Purchase frequency > 4/mo? → Yes','Engagement score > 80? → Yes','→ Offer: Double Points + Shipping']},
+    {name:'David K.',avatar:'🧔',segment:'New × Cautious',attrs:['First Visit','Medium Income','Desktop','Search Traffic','Rural','Cart $0'],keyAttrs:['First Visit','Search Traffic'],offerWeights:[0.88,0.30,0.42,0.55,0.15,0.92],tree:['First visit? → Yes','Cart empty? → Yes','Referral = search? → Yes','→ Offer: Welcome 20% + Price Drop']},
+    {name:'Aisha M.',avatar:'👩‍⚕️',segment:'Returning × Premium',attrs:['3rd Visit','High Spender','Desktop','Bookmark','Urban','Cart $200'],keyAttrs:['High Spender','3rd Visit'],offerWeights:[0.25,0.93,0.88,0.30,0.70,0.20],tree:['Avg order value > $150? → Yes','Visit count > 2? → Yes','Cart value > $150? → Yes','→ Offer: Free Shipping + Gift']},
+    {name:'Jake P.',avatar:'🧑‍🎤',segment:'Young × Mobile',attrs:['Gen Z','Low AOV','Mobile','Instagram','Urban','Cart $28'],keyAttrs:['Gen Z','Instagram'],offerWeights:[0.75,0.35,0.50,0.90,0.20,0.65],tree:['Age < 25? → Yes','Referral = social? → Yes','Mobile user? → Yes','→ Offer: BNPL + Welcome 20%']},
+    {name:'Linda H.',avatar:'👩‍🏫',segment:'Active × Deal Seeker',attrs:['Returning','Coupon User','Desktop','Newsletter','Suburban','Cart $65'],keyAttrs:['Coupon User','Newsletter'],offerWeights:[0.60,0.40,0.90,0.50,0.72,0.88],tree:['Coupon usage > 3? → Yes','Newsletter subscriber? → Yes','Cart $50–$100? → Yes','→ Offer: Gift + Price Drop']},
+];
+
+const offerNames = ['20% Off','Free Ship','Free Gift','BNPL','2x Points','Price Drop'];
+let stats = {total:0,offerWins:[0,0,0,0,0,0],totalWinScore:0};
+
+function generateVisitor() {
+    const v = profiles[Math.floor(Math.random()*profiles.length)];
+    // Add noise to weights
+    const scores = v.offerWeights.map(w => Math.max(0, Math.min(1, w + (Math.random()*0.1-0.05))));
+
+    // Update visitor card
+    document.getElementById('vpAvatar').textContent = v.avatar;
+    document.getElementById('vpName').textContent = v.name;
+    document.getElementById('vpSegment').textContent = v.segment;
+    document.getElementById('vpAttrs').innerHTML = v.attrs.map(a =>
+        `<span class="vp-attr ${v.keyAttrs.includes(a)?'key':''}">${a}</span>`
+    ).join('');
+
+    // Decision tree
+    document.getElementById('treePath').innerHTML = v.tree.map((line,i) => {
+        const isResult = line.startsWith('→');
+        return `<div class="tree-row"><div class="tree-branch">${isResult?'✓':(i+1)}</div><span class="tree-text">${isResult?'':'  '.repeat(i)}${line.replace('→ ','')}</span>${isResult?`<span class="tree-result">Selected</span>`:''}</div>`;
+    }).join('');
+
+    // Score offers
+    const sorted = scores.map((s,i)=>({i,s})).sort((a,b)=>b.s-a.s);
+    const topTwo = sorted.slice(0,2).map(x=>x.i);
+
+    for (let i=0;i<6;i++) {
+        const card = document.getElementById('offer-'+i);
+        card.classList.remove('matched','dimmed');
+        document.getElementById('score-'+i).textContent = (scores[i]*100).toFixed(0)+'%';
+    }
+
+    setTimeout(()=>{
+        for (let i=0;i<6;i++) {
+            const card = document.getElementById('offer-'+i);
+            if (topTwo.includes(i)) card.classList.add('matched');
+            else card.classList.add('dimmed');
+        }
+    }, 200);
+
+    stats.total++;
+    stats.offerWins[sorted[0].i]++;
+    stats.totalWinScore += sorted[0].s;
+    updateStats();
+
+    const matchedNames = topTwo.map(i=>offerNames[i]).join(' + ');
+    logMsg('match', `${v.name} (${v.segment}) → ${matchedNames} (top: ${(sorted[0].s*100).toFixed(0)}%)`);
+}
+
+function generateBatch() {
+    let i = 0;
+    const interval = setInterval(()=>{
+        generateVisitor();
+        i++;
+        if (i>=10) clearInterval(interval);
+    }, 350);
+}
+
+function updateStats() {
+    document.getElementById('sTotal').textContent = stats.total;
+    const topOffer = stats.offerWins.indexOf(Math.max(...stats.offerWins));
+    document.getElementById('sTopOffer').textContent = offerNames[topOffer];
+    document.getElementById('sAvgScore').textContent = stats.total > 0 ? (stats.totalWinScore/stats.total*100).toFixed(0)+'%' : '—';
+    document.getElementById('sPersonalized').textContent = stats.total > 0 ? '90%' : '0%'; // 10% holdout
+}
+
+function resetDemo() {
+    stats = {total:0,offerWins:[0,0,0,0,0,0],totalWinScore:0};
+    updateStats();
+    document.getElementById('vpAvatar').textContent = '👤';
+    document.getElementById('vpName').textContent = 'Generate a visitor';
+    document.getElementById('vpSegment').textContent = 'Click the button below';
+    document.getElementById('vpAttrs').innerHTML = '<span class="vp-attr">Awaiting visitor generation…</span>';
+    document.getElementById('treePath').innerHTML = '<div class="tree-row" style="color:#666">Generate a visitor to see the decision path</div>';
+    for (let i=0;i<6;i++) {
+        document.getElementById('offer-'+i).classList.remove('matched','dimmed');
+        document.getElementById('score-'+i).textContent = '—';
+    }
+    document.getElementById('log').innerHTML = '<div class="log-entry"><em>Reset. Generate visitors to see offer matching…</em></div>';
+}
+</script>
+</body>
+</html>

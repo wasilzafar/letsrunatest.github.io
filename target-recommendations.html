@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recommendations Demo — Adobe Target | Let's Run a Test</title>
+    <link rel="stylesheet" href="styles/common.css">
+    <style>
+        :root{--accent:#ea580c;--accent-dark:#b45309;--accent-light:#fbbf24;--accent-shadow:rgba(234,88,12,0.4);--container-max-width:1040px}
+        .page-header{background:linear-gradient(135deg,#f59e0b 0%,#d97706 50%,#ea580c 100%)}
+
+        /* Algorithm selector */
+        .algo-bar{display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.5rem}
+        .algo-btn{padding:0.5rem 1rem;border-radius:8px;border:2px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#bbb;cursor:pointer;font-size:0.82rem;font-weight:600;transition:all 0.3s}
+        .algo-btn:hover{border-color:#fbbf24;color:#fbbf24}
+        .algo-btn.active{border-color:#ea580c;background:rgba(234,88,12,0.12);color:#fbbf24}
+
+        /* Current product */
+        .current-product{display:flex;gap:1.5rem;align-items:center;background:rgba(255,255,255,0.04);border-radius:12px;padding:1.25rem;margin-bottom:1.5rem;flex-wrap:wrap}
+        .cp-image{width:80px;height:80px;background:rgba(255,255,255,0.06);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:2.5rem;flex-shrink:0}
+        .cp-info{flex:1;min-width:150px}
+        .cp-name{font-weight:700;font-size:1rem;color:#fff}
+        .cp-category{font-size:0.78rem;color:#fbbf24;margin-top:0.1rem}
+        .cp-price{font-size:1.1rem;font-weight:700;color:#4ade80;margin-top:0.25rem}
+        .cp-meta{font-size:0.75rem;color:#888;margin-top:0.2rem}
+        .cp-switcher{display:flex;gap:0.4rem;flex-wrap:wrap}
+        .cp-switch{padding:0.35rem 0.65rem;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#bbb;cursor:pointer;font-size:0.78rem;transition:all 0.2s}
+        .cp-switch:hover{border-color:#fbbf24;color:#fbbf24}
+        .cp-switch.active{border-color:#ea580c;background:rgba(234,88,12,0.15);color:#fbbf24}
+
+        /* Recommendation carousel */
+        .rec-carousel{display:flex;gap:1rem;overflow-x:auto;padding:0.5rem 0 1rem;margin:1rem 0;scroll-behavior:smooth}
+        .rec-card{min-width:175px;max-width:175px;background:rgba(255,255,255,0.04);border:2px solid transparent;border-radius:12px;padding:1rem;text-align:center;transition:all 0.4s;flex-shrink:0;cursor:pointer}
+        .rec-card:hover{border-color:rgba(251,191,36,0.3);transform:translateY(-2px)}
+        .rec-card.highlight{border-color:#4ade80;background:rgba(74,222,128,0.05)}
+        .rec-img{font-size:2.5rem;margin-bottom:0.5rem}
+        .rec-name{font-weight:700;font-size:0.82rem;color:#ddd}
+        .rec-cat{font-size:0.72rem;color:#888;margin-top:0.15rem}
+        .rec-price{font-size:0.95rem;font-weight:700;color:#4ade80;margin-top:0.35rem}
+        .rec-reason{font-size:0.68rem;color:#fbbf24;margin-top:0.35rem;font-style:italic}
+        .rec-score{display:flex;align-items:center;gap:0.3rem;justify-content:center;margin-top:0.4rem}
+        .rec-stars{color:#fbbf24;font-size:0.7rem}
+        .rec-rating{font-size:0.72rem;color:#888}
+
+        /* Algo description */
+        .algo-desc{background:rgba(255,255,255,0.03);border-radius:10px;padding:1rem;margin:1rem 0;font-size:0.85rem;color:#aaa;border-left:3px solid #ea580c}
+        .algo-desc strong{color:#fbbf24}
+
+        @media(max-width:768px){.current-product{flex-direction:column;text-align:center}}
+    </style>
+</head>
+<body>
+
+<div class="page-header">
+    <h1>📦 Recommendations <span class="badge">Algorithm-Based</span></h1>
+    <p>Automatically suggest products or content based on visitor behavior, popularity, and similarity — powered by collaborative filtering and content-based algorithms.</p>
+    <div class="breadcrumb">
+        <a href="index.html">Home</a><span>/</span>
+        <a href="target-activities.html">Target Activities</a><span>/</span>
+        <span style="color:rgba(255,255,255,0.9);">Recommendations</span>
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="section">
+        <h2>What is Recommendations?</h2>
+        <p>Adobe Target Recommendations automatically suggests products, content, or offers based on previous user activity, preferences, and other criteria. It uses a catalog of items and behavioral data to determine what each visitor is most likely to engage with, increasing conversions and engagement.</p>
+        <div class="info-grid">
+            <div class="info-box">
+                <h4>When to Use</h4>
+                <ul>
+                    <li>Product pages (cross-sell, upsell)</li>
+                    <li>Homepage personalized recommendations</li>
+                    <li>Cart page complementary products</li>
+                    <li>Content/article recommendation engines</li>
+                </ul>
+            </div>
+            <div class="info-box">
+                <h4>Key Algorithms</h4>
+                <ul>
+                    <li>People Who Viewed This Viewed That</li>
+                    <li>People Who Bought This Bought That</li>
+                    <li>Most Viewed / Trending</li>
+                    <li>Item-Based Similarity</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>How It Works</h2>
+        <div class="how-it-works">
+            <div class="step"><div class="step-num">1</div><div class="step-label">Upload product catalog via feed</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-label">Collect behavioral data (views, purchases)</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-label">Algorithm computes recommendations</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-label">Render in design template</div></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>🧪 Live Demo — Product Recommendations</h2>
+        <p>Choose a product you're "viewing" and switch between recommendation algorithms to see how the results change. Each algorithm uses different signals to rank recommendations.</p>
+
+        <div class="demo-area">
+            <h3>▶ Select Recommendation Algorithm</h3>
+            <div class="algo-bar">
+                <div class="algo-btn active" onclick="selectAlgo('viewed')" id="algo-viewed">👁️ Viewed Also Viewed</div>
+                <div class="algo-btn" onclick="selectAlgo('bought')" id="algo-bought">🛒 Bought Also Bought</div>
+                <div class="algo-btn" onclick="selectAlgo('trending')" id="algo-trending">🔥 Trending / Most Popular</div>
+                <div class="algo-btn" onclick="selectAlgo('similar')" id="algo-similar">🔗 Similar Items</div>
+                <div class="algo-btn" onclick="selectAlgo('personal')" id="algo-personal">👤 Personalized for You</div>
+            </div>
+
+            <div class="algo-desc" id="algoDesc">
+                <strong>People Who Viewed This Also Viewed:</strong> Collaborative filtering based on co-view patterns. Shows products frequently browsed together in the same session by other visitors.
+            </div>
+
+            <h3>▶ Currently Viewing</h3>
+            <div class="current-product">
+                <div class="cp-image" id="cpImg">👟</div>
+                <div class="cp-info">
+                    <div class="cp-name" id="cpName">Ultra Boost Running Shoes</div>
+                    <div class="cp-category" id="cpCat">Footwear → Running</div>
+                    <div class="cp-price" id="cpPrice">$180.00</div>
+                    <div class="cp-meta" id="cpMeta">⭐ 4.8 · 2,341 reviews · 847 purchases this week</div>
+                </div>
+                <div class="cp-switcher">
+                    <div class="cp-switch active" onclick="switchProduct(0)">👟 Shoes</div>
+                    <div class="cp-switch" onclick="switchProduct(1)">📱 Phone</div>
+                    <div class="cp-switch" onclick="switchProduct(2)">🎧 Headphones</div>
+                    <div class="cp-switch" onclick="switchProduct(3)">📸 Camera</div>
+                </div>
+            </div>
+
+            <h3>▶ Recommended For You</h3>
+            <div class="rec-carousel" id="recCarousel"></div>
+
+            <div class="stats-row">
+                <div class="stat"><div class="val" id="sAlgo">Viewed</div><div class="lbl">Algorithm</div></div>
+                <div class="stat"><div class="val" id="sCount">5</div><div class="lbl">Recs Shown</div></div>
+                <div class="stat"><div class="val" id="sClicks">0</div><div class="lbl">Clicks</div></div>
+                <div class="stat"><div class="val" id="sCtr">0%</div><div class="lbl">Click-Through</div></div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="refreshRecs()">🔄 Refresh Recommendations</button>
+                <button class="btn btn-danger" onclick="resetDemo()">↺ Reset</button>
+            </div>
+
+            <div class="log" id="log"><div class="log-entry"><em>Select a product and algorithm to see recommendations…</em></div></div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <a href="index.html">← All Demos</a> · <a href="target-activities.html">Target Activities</a> ·
+    <a href="https://experienceleague.adobe.com/en/docs/target/using/recommendations/recommendations" target="_blank" rel="noopener">Official Docs ↗</a>
+</footer>
+
+<script src="scripts/log.js"></script>
+<script>
+const products = [
+    {name:'Ultra Boost Running Shoes',icon:'👟',cat:'Footwear → Running',price:'$180.00',meta:'⭐ 4.8 · 2,341 reviews · 847 purchases/wk'},
+    {name:'Galaxy Pro Smartphone',icon:'📱',cat:'Electronics → Phones',price:'$999.00',meta:'⭐ 4.7 · 5,892 reviews · 1,203 purchases/wk'},
+    {name:'Studio Max Headphones',icon:'🎧',cat:'Electronics → Audio',price:'$349.00',meta:'⭐ 4.6 · 1,756 reviews · 632 purchases/wk'},
+    {name:'Mirrorless Pro Camera',icon:'📸',cat:'Electronics → Photography',price:'$2,499.00',meta:'⭐ 4.9 · 892 reviews · 198 purchases/wk'}
+];
+
+const recData = {
+    0: { // Shoes
+        viewed: [
+            {icon:'🧦',name:'Performance Running Socks',cat:'Accessories',price:'$18',reason:'78% co-viewed',rating:'4.5',stars:'★★★★½'},
+            {icon:'👖',name:'Athletic Joggers',cat:'Apparel',price:'$65',reason:'65% co-viewed',rating:'4.4',stars:'★★★★½'},
+            {icon:'🎽',name:'Dry-Fit Running Tee',cat:'Apparel',price:'$45',reason:'62% co-viewed',rating:'4.6',stars:'★★★★★'},
+            {icon:'⌚',name:'GPS Sports Watch',cat:'Wearables',price:'$299',reason:'55% co-viewed',rating:'4.7',stars:'★★★★★'},
+            {icon:'💧',name:'Hydration Belt',cat:'Accessories',price:'$32',reason:'48% co-viewed',rating:'4.2',stars:'★★★★'}
+        ],
+        bought: [
+            {icon:'🧦',name:'Performance Socks (3-pack)',cat:'Accessories',price:'$24',reason:'42% co-purchased',rating:'4.5',stars:'★★★★½'},
+            {icon:'🦶',name:'Custom Insoles',cat:'Accessories',price:'$55',reason:'38% co-purchased',rating:'4.3',stars:'★★★★'},
+            {icon:'🧴',name:'Shoe Protector Spray',cat:'Care',price:'$15',reason:'35% co-purchased',rating:'4.1',stars:'★★★★'},
+            {icon:'👟',name:'Trail Running Shoes',cat:'Footwear',price:'$160',reason:'28% co-purchased',rating:'4.6',stars:'★★★★★'},
+            {icon:'🎒',name:'Running Backpack',cat:'Accessories',price:'$89',reason:'22% co-purchased',rating:'4.4',stars:'★★★★½'}
+        ],
+        trending: [
+            {icon:'👟',name:'Cloud Foam Slides',cat:'Footwear',price:'$65',reason:'#1 trending this week',rating:'4.8',stars:'★★★★★'},
+            {icon:'🏃',name:'Carbon Plate Racer',cat:'Footwear',price:'$250',reason:'#2 trending, +340% sales',rating:'4.9',stars:'★★★★★'},
+            {icon:'🧢',name:'Running Cap UV Pro',cat:'Accessories',price:'$28',reason:'#3 trending, new arrival',rating:'4.5',stars:'★★★★½'},
+            {icon:'🎽',name:'Marathon Singlet',cat:'Apparel',price:'$42',reason:'#4 trending, seasonal',rating:'4.3',stars:'★★★★'},
+            {icon:'📟',name:'Heart Rate Monitor',cat:'Wearables',price:'$79',reason:'#5 trending, best value',rating:'4.6',stars:'★★★★★'}
+        ],
+        similar: [
+            {icon:'👟',name:'Lite Racer Running Shoe',cat:'Footwear',price:'$120',reason:'92% attribute match',rating:'4.5',stars:'★★★★½'},
+            {icon:'👟',name:'Energy Return Runner',cat:'Footwear',price:'$195',reason:'88% attribute match',rating:'4.7',stars:'★★★★★'},
+            {icon:'👟',name:'Gel-Comfort Trainer',cat:'Footwear',price:'$165',reason:'85% attribute match',rating:'4.4',stars:'★★★★½'},
+            {icon:'👟',name:'React Infinity Run',cat:'Footwear',price:'$175',reason:'82% attribute match',rating:'4.6',stars:'★★★★★'},
+            {icon:'👟',name:'Fresh Foam Daily',cat:'Footwear',price:'$135',reason:'78% attribute match',rating:'4.3',stars:'★★★★'}
+        ],
+        personal: [
+            {icon:'🎽',name:'Breathable Running Tee',cat:'Apparel',price:'$38',reason:'Based on your running gear views',rating:'4.4',stars:'★★★★½'},
+            {icon:'⌚',name:'GPS Watch Pro',cat:'Wearables',price:'$349',reason:'Matches your fitness interests',rating:'4.8',stars:'★★★★★'},
+            {icon:'💪',name:'Resistance Bands Set',cat:'Fitness',price:'$25',reason:'Popular with your segment',rating:'4.5',stars:'★★★★½'},
+            {icon:'🎧',name:'Sport Earbuds',cat:'Audio',price:'$129',reason:'Bought by similar shoppers',rating:'4.6',stars:'★★★★★'},
+            {icon:'🧃',name:'Protein Shake Bundle',cat:'Nutrition',price:'$45',reason:'Complementary category',rating:'4.2',stars:'★★★★'}
+        ]
+    },
+    1: { // Phone
+        viewed: [{icon:'📱',name:'Phone Case Ultra',cat:'Accessories',price:'$35',reason:'82% co-viewed',rating:'4.3',stars:'★★★★'},{icon:'🔌',name:'Fast Charger 65W',cat:'Accessories',price:'$49',reason:'71% co-viewed',rating:'4.6',stars:'★★★★★'},{icon:'🖥️',name:'Tablet Pro 12"',cat:'Electronics',price:'$799',reason:'58% co-viewed',rating:'4.7',stars:'★★★★★'},{icon:'⌚',name:'Smart Watch Ultra',cat:'Wearables',price:'$399',reason:'52% co-viewed',rating:'4.5',stars:'★★★★½'},{icon:'🎧',name:'Wireless Earbuds Pro',cat:'Audio',price:'$249',reason:'48% co-viewed',rating:'4.8',stars:'★★★★★'}],
+        bought: [{icon:'📱',name:'Screen Protector (2-pk)',cat:'Accessories',price:'$15',reason:'68% co-purchased',rating:'4.2',stars:'★★★★'},{icon:'📱',name:'MagSafe Case',cat:'Accessories',price:'$45',reason:'55% co-purchased',rating:'4.5',stars:'★★★★½'},{icon:'🔌',name:'USB-C Cable 6ft',cat:'Accessories',price:'$12',reason:'50% co-purchased',rating:'4.1',stars:'★★★★'},{icon:'🔋',name:'Power Bank 20000mAh',cat:'Accessories',price:'$55',reason:'35% co-purchased',rating:'4.4',stars:'★★★★½'},{icon:'📸',name:'Lens Attachment Kit',cat:'Accessories',price:'$65',reason:'22% co-purchased',rating:'4.0',stars:'★★★★'}],
+        trending: [{icon:'📱',name:'Foldable Phone Gen 3',cat:'Electronics',price:'$1,799',reason:'#1 trending, +520% views',rating:'4.6',stars:'★★★★★'},{icon:'🎧',name:'Spatial Audio Buds',cat:'Audio',price:'$179',reason:'#2 trending this week',rating:'4.7',stars:'★★★★★'},{icon:'⌚',name:'Health Watch SE',cat:'Wearables',price:'$249',reason:'#3 trending, new release',rating:'4.5',stars:'★★★★½'},{icon:'🔌',name:'MagSafe Charger Duo',cat:'Accessories',price:'$129',reason:'#4 trending',rating:'4.4',stars:'★★★★½'},{icon:'📱',name:'Budget Phone X',cat:'Electronics',price:'$299',reason:'#5 trending, best value',rating:'4.3',stars:'★★★★'}],
+        similar: [{icon:'📱',name:'Galaxy Lite',cat:'Electronics',price:'$699',reason:'94% attribute match',rating:'4.5',stars:'★★★★½'},{icon:'📱',name:'Pixel Pro',cat:'Electronics',price:'$899',reason:'91% attribute match',rating:'4.7',stars:'★★★★★'},{icon:'📱',name:'OnePlus Flagship',cat:'Electronics',price:'$849',reason:'87% attribute match',rating:'4.6',stars:'★★★★★'},{icon:'📱',name:'Xperia Mark V',cat:'Electronics',price:'$1,099',reason:'82% attribute match',rating:'4.4',stars:'★★★★½'},{icon:'📱',name:'iPhone 15 Pro',cat:'Electronics',price:'$1,199',reason:'80% attribute match',rating:'4.8',stars:'★★★★★'}],
+        personal: [{icon:'💻',name:'Laptop Pro 16',cat:'Electronics',price:'$2,399',reason:'Matches your tech profile',rating:'4.8',stars:'★★★★★'},{icon:'🎮',name:'Mobile Controller',cat:'Gaming',price:'$69',reason:'Popular in your segment',rating:'4.3',stars:'★★★★'},{icon:'📱',name:'Premium Phone Case',cat:'Accessories',price:'$55',reason:'Based on your browsing',rating:'4.5',stars:'★★★★½'},{icon:'🔋',name:'Solar Power Bank',cat:'Accessories',price:'$79',reason:'Eco-friendly picks for you',rating:'4.1',stars:'★★★★'},{icon:'📡',name:'5G Wi-Fi Router',cat:'Networking',price:'$199',reason:'Complementary product',rating:'4.4',stars:'★★★★½'}]
+    },
+    2: { // Headphones
+        viewed: [{icon:'🎵',name:'DAC Amplifier',cat:'Audio',price:'$199',reason:'76% co-viewed',rating:'4.7',stars:'★★★★★'},{icon:'🎤',name:'USB Microphone',cat:'Audio',price:'$129',reason:'62% co-viewed',rating:'4.5',stars:'★★★★½'},{icon:'🔊',name:'Bookshelf Speakers',cat:'Audio',price:'$349',reason:'55% co-viewed',rating:'4.8',stars:'★★★★★'},{icon:'📱',name:'Music Player Hi-Res',cat:'Electronics',price:'$449',reason:'48% co-viewed',rating:'4.6',stars:'★★★★★'},{icon:'🎧',name:'Replacement Ear Pads',cat:'Accessories',price:'$25',reason:'42% co-viewed',rating:'4.2',stars:'★★★★'}],
+        bought: [{icon:'🎧',name:'Headphone Stand',cat:'Accessories',price:'$35',reason:'58% co-purchased',rating:'4.3',stars:'★★★★'},{icon:'🔌',name:'Balanced Cable 4.4mm',cat:'Accessories',price:'$45',reason:'42% co-purchased',rating:'4.4',stars:'★★★★½'},{icon:'🧳',name:'Hard Carry Case',cat:'Accessories',price:'$29',reason:'38% co-purchased',rating:'4.5',stars:'★★★★½'},{icon:'🎵',name:'Portable DAC',cat:'Audio',price:'$99',reason:'25% co-purchased',rating:'4.6',stars:'★★★★★'},{icon:'🎧',name:'Wireless Adapter',cat:'Accessories',price:'$79',reason:'20% co-purchased',rating:'4.1',stars:'★★★★'}],
+        trending: [{icon:'🎧',name:'ANC Earbuds Gen 4',cat:'Audio',price:'$199',reason:'#1 trending, +280% sales',rating:'4.8',stars:'★★★★★'},{icon:'🎧',name:'Open-Back Planar',cat:'Audio',price:'$599',reason:'#2 trending, audiophile pick',rating:'4.9',stars:'★★★★★'},{icon:'🎤',name:'Podcast Kit Pro',cat:'Audio',price:'$299',reason:'#3 trending, creator fav',rating:'4.5',stars:'★★★★½'},{icon:'🔊',name:'Soundbar Ultra',cat:'Audio',price:'$449',reason:'#4 trending this month',rating:'4.6',stars:'★★★★★'},{icon:'🎧',name:'Gaming Headset 7.1',cat:'Audio',price:'$159',reason:'#5 trending, best value',rating:'4.4',stars:'★★★★½'}],
+        similar: [{icon:'🎧',name:'Momentum Wireless',cat:'Audio',price:'$379',reason:'93% attribute match',rating:'4.7',stars:'★★★★★'},{icon:'🎧',name:'WH-1000XM5',cat:'Audio',price:'$398',reason:'90% attribute match',rating:'4.8',stars:'★★★★★'},{icon:'🎧',name:'Bose QC Ultra',cat:'Audio',price:'$429',reason:'87% attribute match',rating:'4.6',stars:'★★★★★'},{icon:'🎧',name:'AirPods Max',cat:'Audio',price:'$549',reason:'82% attribute match',rating:'4.5',stars:'★★★★½'},{icon:'🎧',name:'Focal Bathys',cat:'Audio',price:'$699',reason:'78% attribute match',rating:'4.7',stars:'★★★★★'}],
+        personal: [{icon:'🎵',name:'Hi-Res Music Subscription',cat:'Services',price:'$15/mo',reason:'Perfect for your headphones',rating:'4.6',stars:'★★★★★'},{icon:'🎤',name:'Studio Monitor Arm',cat:'Accessories',price:'$89',reason:'Based on your setup views',rating:'4.4',stars:'★★★★½'},{icon:'🎮',name:'Audio Interface',cat:'Pro Audio',price:'$169',reason:'Popular with audiophiles',rating:'4.7',stars:'★★★★★'},{icon:'📀',name:'Vinyl Record Bundle',cat:'Music',price:'$55',reason:'Trending in your segment',rating:'4.3',stars:'★★★★'},{icon:'🛋️',name:'Acoustic Panel Kit',cat:'Home',price:'$120',reason:'Complements audio setup',rating:'4.2',stars:'★★★★'}]
+    },
+    3: { // Camera
+        viewed: [{icon:'🔍',name:'50mm f/1.4 Lens',cat:'Lenses',price:'$449',reason:'85% co-viewed',rating:'4.9',stars:'★★★★★'},{icon:'💾',name:'CFexpress Card 256GB',cat:'Storage',price:'$199',reason:'72% co-viewed',rating:'4.7',stars:'★★★★★'},{icon:'📐',name:'Carbon Fiber Tripod',cat:'Support',price:'$329',reason:'65% co-viewed',rating:'4.6',stars:'★★★★★'},{icon:'💡',name:'LED Panel Light',cat:'Lighting',price:'$189',reason:'55% co-viewed',rating:'4.5',stars:'★★★★½'},{icon:'🎒',name:'Camera Backpack',cat:'Bags',price:'$149',reason:'48% co-viewed',rating:'4.4',stars:'★★★★½'}],
+        bought: [{icon:'💾',name:'SD Card V90 128GB',cat:'Storage',price:'$89',reason:'62% co-purchased',rating:'4.6',stars:'★★★★★'},{icon:'🔋',name:'Extra Battery (2-pk)',cat:'Power',price:'$59',reason:'55% co-purchased',rating:'4.3',stars:'★★★★'},{icon:'🛡️',name:'UV Filter 77mm',cat:'Filters',price:'$35',reason:'48% co-purchased',rating:'4.2',stars:'★★★★'},{icon:'🧹',name:'Sensor Cleaning Kit',cat:'Care',price:'$28',reason:'35% co-purchased',rating:'4.4',stars:'★★★★½'},{icon:'📐',name:'Mini Tripod',cat:'Support',price:'$45',reason:'28% co-purchased',rating:'4.5',stars:'★★★★½'}],
+        trending: [{icon:'📸',name:'Action Cam Pro',cat:'Cameras',price:'$399',reason:'#1 trending, +450% views',rating:'4.7',stars:'★★★★★'},{icon:'🎥',name:'Gimbal Stabilizer',cat:'Support',price:'$349',reason:'#2 trending, creator must-have',rating:'4.8',stars:'★★★★★'},{icon:'🔍',name:'Macro Lens 100mm',cat:'Lenses',price:'$599',reason:'#3 trending, award winner',rating:'4.9',stars:'★★★★★'},{icon:'💡',name:'Ring Light 18"',cat:'Lighting',price:'$79',reason:'#4 trending, content creation',rating:'4.4',stars:'★★★★½'},{icon:'🖥️',name:'4K Monitor for Editing',cat:'Displays',price:'$599',reason:'#5 trending, photographer pick',rating:'4.6',stars:'★★★★★'}],
+        similar: [{icon:'📸',name:'Canon R6 Mark III',cat:'Cameras',price:'$2,299',reason:'95% attribute match',rating:'4.8',stars:'★★★★★'},{icon:'📸',name:'Nikon Z8',cat:'Cameras',price:'$3,999',reason:'91% attribute match',rating:'4.9',stars:'★★★★★'},{icon:'📸',name:'Sony A7R V',cat:'Cameras',price:'$3,899',reason:'88% attribute match',rating:'4.7',stars:'★★★★★'},{icon:'📸',name:'Fujifilm X-H2',cat:'Cameras',price:'$1,999',reason:'84% attribute match',rating:'4.6',stars:'★★★★★'},{icon:'📸',name:'Panasonic S5 II',cat:'Cameras',price:'$1,999',reason:'80% attribute match',rating:'4.5',stars:'★★★★½'}],
+        personal: [{icon:'🖥️',name:'Photo Editor Pro License',cat:'Software',price:'$120',reason:'Essential for your workflow',rating:'4.7',stars:'★★★★★'},{icon:'📚',name:'Photography Masterclass',cat:'Education',price:'$49',reason:'Based on your skill level',rating:'4.8',stars:'★★★★★'},{icon:'🖨️',name:'Photo Printer A3',cat:'Printers',price:'$699',reason:'Popular with camera buyers',rating:'4.5',stars:'★★★★½'},{icon:'☁️',name:'Cloud Storage 2TB',cat:'Services',price:'$10/mo',reason:'For your photo library',rating:'4.4',stars:'★★★★½'},{icon:'🎨',name:'Color Calibrator',cat:'Tools',price:'$179',reason:'Pro recommendation',rating:'4.6',stars:'★★★★★'}]
+    }
+};
+
+const algoDescriptions = {
+    viewed: '<strong>People Who Viewed This Also Viewed:</strong> Collaborative filtering based on co-view patterns. Shows products frequently browsed together in the same session by other visitors.',
+    bought: '<strong>People Who Bought This Also Bought:</strong> Purchase co-occurrence analysis. Recommends products that are commonly purchased together, ideal for cross-sell and upsell.',
+    trending: '<strong>Most Viewed / Trending:</strong> Popularity-based algorithm showing items with the highest view counts, fastest-growing engagement, or trending purchases across the catalog.',
+    similar: '<strong>Item Similarity:</strong> Content-based filtering using item attributes (category, price range, brand, tags). Returns items with the highest attribute-match percentage.',
+    personal: '<strong>Personalized for You:</strong> Combines collaborative filtering with individual visitor behavior (past views, purchases, segment) to create a unique recommendation set per visitor.'
+};
+
+let currentProduct = 0;
+let currentAlgo = 'viewed';
+let totalClicks = 0;
+let totalImpressions = 0;
+
+function selectAlgo(algo) {
+    currentAlgo = algo;
+    document.querySelectorAll('.algo-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('algo-'+algo).classList.add('active');
+    document.getElementById('algoDesc').innerHTML = algoDescriptions[algo];
+    document.getElementById('sAlgo').textContent = algo.charAt(0).toUpperCase()+algo.slice(1);
+    renderRecs();
+    logMsg('algo', `Switched to "${algo}" algorithm for ${products[currentProduct].name}`);
+}
+
+function switchProduct(idx) {
+    currentProduct = idx;
+    document.querySelectorAll('.cp-switch').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.cp-switch')[idx].classList.add('active');
+    const p = products[idx];
+    document.getElementById('cpImg').textContent = p.icon;
+    document.getElementById('cpName').textContent = p.name;
+    document.getElementById('cpCat').textContent = p.cat;
+    document.getElementById('cpPrice').textContent = p.price;
+    document.getElementById('cpMeta').textContent = p.meta;
+    renderRecs();
+    logMsg('product', `Now viewing: ${p.name}`);
+}
+
+function renderRecs() {
+    const recs = recData[currentProduct][currentAlgo];
+    totalImpressions += recs.length;
+    document.getElementById('sCount').textContent = recs.length;
+    document.getElementById('recCarousel').innerHTML = recs.map((r,i) =>
+        `<div class="rec-card ${i===0?'highlight':''}" onclick="clickRec('${r.name}')">
+            <div class="rec-img">${r.icon}</div>
+            <div class="rec-name">${r.name}</div>
+            <div class="rec-cat">${r.cat}</div>
+            <div class="rec-price">${r.price}</div>
+            <div class="rec-reason">${r.reason}</div>
+            <div class="rec-score"><span class="rec-stars">${r.stars}</span><span class="rec-rating">${r.rating}</span></div>
+        </div>`
+    ).join('');
+}
+
+function clickRec(name) {
+    totalClicks++;
+    document.getElementById('sClicks').textContent = totalClicks;
+    document.getElementById('sCtr').textContent = totalImpressions > 0 ? (totalClicks/totalImpressions*100).toFixed(1)+'%' : '0%';
+    logMsg('click', `Clicked recommendation: ${name}`);
+}
+
+function refreshRecs() {
+    renderRecs();
+    logMsg('refresh', `Refreshed recommendations using "${currentAlgo}" algorithm`);
+}
+
+function resetDemo() {
+    totalClicks = 0;
+    totalImpressions = 0;
+    currentProduct = 0;
+    currentAlgo = 'viewed';
+    switchProduct(0);
+    selectAlgo('viewed');
+    document.getElementById('sClicks').textContent = '0';
+    document.getElementById('sCtr').textContent = '0%';
+    document.getElementById('log').innerHTML = '<div class="log-entry"><em>Reset. Select a product and algorithm to explore…</em></div>';
+}
+
+// Initial render
+renderRecs();
+</script>
+</body>
+</html>

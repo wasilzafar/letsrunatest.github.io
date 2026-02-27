@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Experience Targeting (XT) Demo — Adobe Target | Let's Run a Test</title>
+    <link rel="stylesheet" href="styles/common.css">
+    <style>
+        :root{--accent:#ec4899;--accent-dark:#be185d;--accent-light:#f472b6;--accent-shadow:rgba(236,72,153,0.4)}
+
+        /* Audience selector */
+        .audience-bar{display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.5rem}
+        .aud-btn{padding:0.5rem 1.2rem;border-radius:20px;border:2px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:#bbb;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.3s;display:flex;align-items:center;gap:0.4rem}
+        .aud-btn:hover{border-color:#ec4899;color:#f472b6}
+        .aud-btn.active{border-color:#ec4899;background:rgba(236,72,153,0.12);color:#f472b6}
+        .aud-btn .aud-icon{font-size:1.1rem}
+
+        /* Preview area */
+        .preview{background:rgba(255,255,255,0.03);border-radius:12px;overflow:hidden;margin:1rem 0;border:2px solid transparent;transition:border-color 0.4s}
+        .preview.shown{border-color:#ec4899}
+        .preview-header{padding:1.25rem 1.5rem;transition:background 0.5s}
+        .preview-header h2{font-size:1.5rem;color:#fff;margin-bottom:0.3rem;transition:all 0.4s}
+        .preview-header p{font-size:0.9rem;color:rgba(255,255,255,0.7)}
+        .preview-body{display:flex;gap:1rem;padding:1rem 1.5rem 1.5rem;flex-wrap:wrap}
+        .promo-card{flex:1;min-width:140px;background:rgba(255,255,255,0.06);border-radius:10px;padding:1rem;text-align:center;transition:all 0.4s}
+        .promo-icon{font-size:2.5rem;margin-bottom:0.5rem}
+        .promo-title{font-weight:700;font-size:0.9rem;color:#fff}
+        .promo-text{font-size:0.78rem;color:#999;margin-top:0.25rem}
+        .promo-cta{margin-top:0.75rem;display:inline-block;padding:0.35rem 0.8rem;border-radius:6px;font-size:0.78rem;font-weight:600;transition:all 0.3s;cursor:pointer}
+
+        /* Priority rules */
+        .rules-panel{background:rgba(255,255,255,0.03);border-radius:10px;padding:1rem 1.25rem;margin:1rem 0}
+        .rules-panel h4{font-size:0.85rem;color:#f472b6;margin-bottom:0.75rem}
+        .rule{display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.82rem}
+        .rule:last-child{border-bottom:none}
+        .rule-priority{width:24px;height:24px;border-radius:50%;background:#ec4899;color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0}
+        .rule-audience{font-weight:600;color:#ddd;min-width:100px}
+        .rule-arrow{color:#555}
+        .rule-exp{color:#f472b6}
+        .rule.active{background:rgba(236,72,153,0.08);border-radius:6px;padding:0.5rem 0.75rem;margin:0 -0.75rem}
+
+        @media(max-width:768px){.preview-body{flex-direction:column}}
+    </style>
+</head>
+<body>
+
+<div class="page-header">
+    <h1>🎯 Experience Targeting <span class="badge">Rules-Based</span></h1>
+    <p>Deliver specific experiences to defined audience segments using marketer-defined rules. The right experience for the right audience — every time.</p>
+    <div class="breadcrumb">
+        <a href="index.html">Home</a><span>/</span>
+        <a href="target-activities.html">Target Activities</a><span>/</span>
+        <span style="color:rgba(255,255,255,0.9);">Experience Targeting</span>
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="section">
+        <h2>What is Experience Targeting (XT)?</h2>
+        <p>Experience Targeting delivers specific content to a specific audience based on marketer-defined rules. Unlike testing-based activities that find a winner, XT uses your existing knowledge about which experience should be shown to which audience segments. Rules are evaluated in priority order — the first matching rule wins.</p>
+        <div class="info-grid">
+            <div class="info-box">
+                <h4>When to Use</h4>
+                <ul>
+                    <li>You know which content suits which audience</li>
+                    <li>Geo-targeting different regions</li>
+                    <li>Different messaging for new vs. returning visitors</li>
+                    <li>Personalization via known audience attributes</li>
+                </ul>
+            </div>
+            <div class="info-box">
+                <h4>Key Characteristics</h4>
+                <ul>
+                    <li>Rules-based, marketer-defined targeting</li>
+                    <li>Priority ordering for overlapping audiences</li>
+                    <li>No statistical testing required</li>
+                    <li>Instant activation — no warm-up period</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>How It Works</h2>
+        <div class="how-it-works">
+            <div class="step"><div class="step-num">1</div><div class="step-label">Define audience segments</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-label">Create experience per segment</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-label">Set priority ordering</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-label">Visitor arrives & rules evaluate</div></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>🧪 Live Demo — Audience-Based Experience Delivery</h2>
+        <p>Click an audience segment to simulate a visitor arriving from that segment. Watch the preview update to show the targeted experience and see which priority rule matched.</p>
+
+        <div class="demo-area">
+            <h3>▶ Select Audience Segment</h3>
+            <div class="audience-bar">
+                <div class="aud-btn" onclick="selectAudience('new')" id="aud-new"><span class="aud-icon">🆕</span> New Visitors</div>
+                <div class="aud-btn" onclick="selectAudience('returning')" id="aud-returning"><span class="aud-icon">🔄</span> Returning Visitors</div>
+                <div class="aud-btn" onclick="selectAudience('cart')" id="aud-cart"><span class="aud-icon">🛒</span> Cart Abandoners</div>
+                <div class="aud-btn" onclick="selectAudience('vip')" id="aud-vip"><span class="aud-icon">⭐</span> VIP Members</div>
+                <div class="aud-btn" onclick="selectAudience('mobile')" id="aud-mobile"><span class="aud-icon">📱</span> Mobile Users</div>
+            </div>
+
+            <h3>▶ Targeted Experience Preview</h3>
+            <div class="preview" id="preview">
+                <div class="preview-header" id="pvHeader" style="background:linear-gradient(135deg,#333,#222)">
+                    <h2 id="pvTitle">Select an audience above</h2>
+                    <p id="pvSubtitle">The preview will update based on the targeting rules</p>
+                </div>
+                <div class="preview-body" id="pvBody">
+                    <div class="promo-card"><div class="promo-icon">❓</div><div class="promo-title">Offer A</div><div class="promo-text">Pending audience selection</div></div>
+                    <div class="promo-card"><div class="promo-icon">❓</div><div class="promo-title">Offer B</div><div class="promo-text">Pending audience selection</div></div>
+                    <div class="promo-card"><div class="promo-icon">❓</div><div class="promo-title">Offer C</div><div class="promo-text">Pending audience selection</div></div>
+                </div>
+            </div>
+
+            <div class="rules-panel">
+                <h4>📋 Priority Rules (first match wins)</h4>
+                <div class="rule" id="rule-1"><span class="rule-priority">1</span><span class="rule-audience">VIP Members</span><span class="rule-arrow">→</span><span class="rule-exp">Premium Exclusives Experience</span></div>
+                <div class="rule" id="rule-2"><span class="rule-priority">2</span><span class="rule-audience">Cart Abandoners</span><span class="rule-arrow">→</span><span class="rule-exp">Recovery & Discount Experience</span></div>
+                <div class="rule" id="rule-3"><span class="rule-priority">3</span><span class="rule-audience">Mobile Users</span><span class="rule-arrow">→</span><span class="rule-exp">Mobile-Optimized Experience</span></div>
+                <div class="rule" id="rule-4"><span class="rule-priority">4</span><span class="rule-audience">Returning Visitors</span><span class="rule-arrow">→</span><span class="rule-exp">Welcome Back Experience</span></div>
+                <div class="rule" id="rule-5"><span class="rule-priority">5</span><span class="rule-audience">New Visitors</span><span class="rule-arrow">→</span><span class="rule-exp">First-Time Welcome Experience</span></div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat"><div class="val" id="sVip">0</div><div class="lbl">VIP Served</div></div>
+                <div class="stat"><div class="val" id="sCart">0</div><div class="lbl">Cart Recovery</div></div>
+                <div class="stat"><div class="val" id="sReturn">0</div><div class="lbl">Returning</div></div>
+                <div class="stat"><div class="val" id="sNew">0</div><div class="lbl">New Visitors</div></div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="randomVisitors()">🎲 Simulate 10 Random Visitors</button>
+                <button class="btn btn-danger" onclick="resetDemo()">↺ Reset</button>
+            </div>
+
+            <div class="log" id="log"><div class="log-entry"><em>Select an audience segment to see targeting in action…</em></div></div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <a href="index.html">← All Demos</a> · <a href="target-activities.html">Target Activities</a> ·
+    <a href="https://experienceleague.adobe.com/en/docs/target/using/activities/experience-targeting/experience-target" target="_blank" rel="noopener">Official Docs ↗</a>
+</footer>
+
+<script src="scripts/log.js"></script>
+<script>
+const experiences = {
+    vip: {
+        rule: 1,
+        bg: 'linear-gradient(135deg,#7c3aed,#4c1d95)',
+        title: '✨ Welcome Back, VIP!',
+        subtitle: 'Exclusive early access & premium rewards await',
+        cards: [
+            {icon:'👑',title:'Early Access',text:'Shop the collection 48 hours before anyone else',cta:'Shop Now',ctaColor:'#7c3aed'},
+            {icon:'💎',title:'VIP Reward',text:'Your 500 bonus points have been applied',cta:'View Rewards',ctaColor:'#7c3aed'},
+            {icon:'🎁',title:'Member Gift',text:'Complimentary luxury sample with your order',cta:'Claim Gift',ctaColor:'#7c3aed'}
+        ]
+    },
+    cart: {
+        rule: 2,
+        bg: 'linear-gradient(135deg,#ef4444,#991b1b)',
+        title: '🛒 Forgot Something?',
+        subtitle: 'Your cart is waiting — complete your order with 15% off!',
+        cards: [
+            {icon:'💸',title:'15% Off',text:'Use code COMEBACK15 at checkout',cta:'Apply Code',ctaColor:'#ef4444'},
+            {icon:'📦',title:'Free Shipping',text:'Orders over $50 ship free today',cta:'View Cart',ctaColor:'#ef4444'},
+            {icon:'⏰',title:'Hurry!',text:'Your saved items are selling fast',cta:'Complete Order',ctaColor:'#ef4444'}
+        ]
+    },
+    mobile: {
+        rule: 3,
+        bg: 'linear-gradient(135deg,#06b6d4,#0e7490)',
+        title: '📱 Shop on the Go!',
+        subtitle: 'App-exclusive deals & one-tap checkout',
+        cards: [
+            {icon:'📲',title:'Get the App',text:'Download for extra 10% off first order',cta:'Download',ctaColor:'#06b6d4'},
+            {icon:'⚡',title:'Quick Buy',text:'One-tap checkout enabled for mobile',cta:'Try It',ctaColor:'#06b6d4'},
+            {icon:'🔔',title:'Push Alerts',text:'Never miss a flash sale or price drop',cta:'Enable',ctaColor:'#06b6d4'}
+        ]
+    },
+    returning: {
+        rule: 4,
+        bg: 'linear-gradient(135deg,#10b981,#047857)',
+        title: '👋 Welcome Back!',
+        subtitle: 'We\'ve got new arrivals since your last visit',
+        cards: [
+            {icon:'🆕',title:'New Arrivals',text:'42 new products since your last visit',cta:'Browse',ctaColor:'#10b981'},
+            {icon:'❤️',title:'Wishlist',text:'3 items from your wishlist are on sale',cta:'View Deals',ctaColor:'#10b981'},
+            {icon:'📊',title:'For You',text:'Picks based on your browsing history',cta:'Explore',ctaColor:'#10b981'}
+        ]
+    },
+    new: {
+        rule: 5,
+        bg: 'linear-gradient(135deg,#f59e0b,#b45309)',
+        title: '🎉 Welcome to Our Store!',
+        subtitle: 'First time here? Get 20% off your first order!',
+        cards: [
+            {icon:'🎊',title:'20% Off',text:'Sign up for your welcome discount',cta:'Get Code',ctaColor:'#f59e0b'},
+            {icon:'⭐',title:'Best Sellers',text:'Discover our most popular products',cta:'Shop Now',ctaColor:'#f59e0b'},
+            {icon:'🏷️',title:'Sale Items',text:'Great deals to get you started',cta:'View Sale',ctaColor:'#f59e0b'}
+        ]
+    }
+};
+
+let stats = {vip:0,cart:0,returning:0,new:0,mobile:0};
+
+function selectAudience(aud) {
+    // Update buttons
+    document.querySelectorAll('.aud-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('aud-'+aud).classList.add('active');
+
+    const exp = experiences[aud];
+
+    // Animate preview
+    const preview = document.getElementById('preview');
+    preview.classList.remove('shown');
+    setTimeout(()=>{
+        document.getElementById('pvHeader').style.background = exp.bg;
+        document.getElementById('pvTitle').textContent = exp.title;
+        document.getElementById('pvSubtitle').textContent = exp.subtitle;
+        document.getElementById('pvBody').innerHTML = exp.cards.map(c =>
+            `<div class="promo-card"><div class="promo-icon">${c.icon}</div><div class="promo-title">${c.title}</div><div class="promo-text">${c.text}</div><div class="promo-cta" style="background:${c.ctaColor};color:#fff">${c.cta}</div></div>`
+        ).join('');
+        preview.classList.add('shown');
+    }, 150);
+
+    // Highlight matched rule
+    for(let i=1;i<=5;i++) document.getElementById('rule-'+i).classList.remove('active');
+    document.getElementById('rule-'+exp.rule).classList.add('active');
+
+    stats[aud]++;
+    updateStats();
+
+    const names = {vip:'VIP Members',cart:'Cart Abandoners',mobile:'Mobile Users',returning:'Returning Visitors',new:'New Visitors'};
+    const expNames = {vip:'Premium Exclusives',cart:'Recovery & Discount',mobile:'Mobile-Optimized',returning:'Welcome Back',new:'First-Time Welcome'};
+    logMsg('target', `${names[aud]} → ${expNames[aud]} (Priority Rule #${exp.rule})`);
+}
+
+function randomVisitors() {
+    const auds = Object.keys(experiences);
+    let i = 0;
+    const interval = setInterval(()=>{
+        selectAudience(auds[Math.floor(Math.random()*auds.length)]);
+        i++;
+        if(i>=10) clearInterval(interval);
+    }, 500);
+}
+
+function updateStats() {
+    document.getElementById('sVip').textContent = stats.vip;
+    document.getElementById('sCart').textContent = stats.cart;
+    document.getElementById('sReturn').textContent = stats.returning;
+    document.getElementById('sNew').textContent = stats.new;
+}
+
+function resetDemo() {
+    stats = {vip:0,cart:0,returning:0,new:0,mobile:0};
+    updateStats();
+    document.querySelectorAll('.aud-btn').forEach(b=>b.classList.remove('active'));
+    for(let i=1;i<=5;i++) document.getElementById('rule-'+i).classList.remove('active');
+    document.getElementById('preview').classList.remove('shown');
+    document.getElementById('pvHeader').style.background = 'linear-gradient(135deg,#333,#222)';
+    document.getElementById('pvTitle').textContent = 'Select an audience above';
+    document.getElementById('pvSubtitle').textContent = 'The preview will update based on the targeting rules';
+    document.getElementById('pvBody').innerHTML = '<div class="promo-card"><div class="promo-icon">❓</div><div class="promo-title">Offer A</div><div class="promo-text">Pending</div></div><div class="promo-card"><div class="promo-icon">❓</div><div class="promo-title">Offer B</div><div class="promo-text">Pending</div></div><div class="promo-card"><div class="promo-icon">❓</div><div class="promo-title">Offer C</div><div class="promo-text">Pending</div></div>';
+    document.getElementById('log').innerHTML = '<div class="log-entry"><em>Reset. Select an audience to begin…</em></div>';
+}
+</script>
+</body>
+</html>

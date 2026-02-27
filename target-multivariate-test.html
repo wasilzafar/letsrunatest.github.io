@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multivariate Test (MVT) Demo — Adobe Target | Let's Run a Test</title>
+    <link rel="stylesheet" href="styles/common.css">
+    <style>
+        :root{--accent:#f59e0b;--accent-dark:#b45309;--accent-light:#fbbf24;--badge-color:#000;--btn-primary-color:#000;--accent-shadow:rgba(245,158,11,0.4);--container-max-width:1040px}
+
+        /* Element editor */
+        .editor-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin:1rem 0}
+        .element-group{background:rgba(255,255,255,0.03);border-radius:10px;padding:1rem}
+        .element-group h4{font-size:0.82rem;color:#fbbf24;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.3rem}
+        .variation-btn{display:block;width:100%;padding:0.5rem 0.75rem;margin-bottom:0.4rem;border:2px solid rgba(255,255,255,0.08);border-radius:8px;background:rgba(255,255,255,0.03);color:#bbb;cursor:pointer;font-size:0.8rem;text-align:left;transition:all 0.2s}
+        .variation-btn:hover{border-color:#fbbf24;color:#fbbf24}
+        .variation-btn.selected{border-color:#f59e0b;background:rgba(245,158,11,0.1);color:#fbbf24;font-weight:600}
+
+        /* Live preview */
+        .preview-box{border-radius:12px;overflow:hidden;margin:1.5rem 0;border:2px solid rgba(255,255,255,0.08);transition:all 0.3s}
+        .pv-hero{padding:2rem 2rem 1.25rem;text-align:center;transition:background 0.5s}
+        .pv-headline{font-size:1.6rem;font-weight:800;color:#fff;margin-bottom:0.4rem;transition:all 0.3s}
+        .pv-sub{font-size:0.9rem;color:rgba(255,255,255,0.7)}
+        .pv-img{width:100%;height:140px;display:flex;align-items:center;justify-content:center;font-size:4rem;transition:all 0.4s;background:rgba(0,0,0,0.2)}
+        .pv-cta-area{padding:1.25rem;text-align:center}
+        .pv-cta{display:inline-block;padding:0.65rem 2rem;border-radius:8px;font-weight:700;font-size:0.95rem;cursor:pointer;transition:all 0.3s;border:none}
+
+        /* Combo indicator */
+        .combo-indicator{background:rgba(255,255,255,0.04);border-radius:10px;padding:1rem 1.25rem;margin:1rem 0;text-align:center}
+        .combo-label{font-size:0.78rem;color:#888;margin-bottom:0.25rem}
+        .combo-formula{font-size:0.9rem;color:#fbbf24;font-weight:700;letter-spacing:0.02em}
+        .combo-total{font-size:0.8rem;color:#888;margin-top:0.25rem}
+
+        /* Results table */
+        .results-table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:0.8rem}
+        .results-table th{text-align:left;padding:0.5rem 0.75rem;color:#fbbf24;font-size:0.75rem;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.1)}
+        .results-table td{padding:0.5rem 0.75rem;border-bottom:1px solid rgba(255,255,255,0.04);color:#bbb}
+        .results-table tr.winner{background:rgba(74,222,128,0.06)}
+        .results-table tr.winner td{color:#4ade80}
+        .results-table .cvr{font-weight:700}
+        .mini-bar{display:inline-block;height:6px;border-radius:3px;background:#f59e0b;vertical-align:middle;margin-left:0.5rem;transition:width 0.5s}
+
+        @media(max-width:768px){.editor-grid{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+
+<div class="page-header">
+    <h1>🧬 Multivariate Test <span class="badge">Full Factorial</span></h1>
+    <p>Test combinations of page elements simultaneously to discover which combination produces the best result — without testing every element in isolation.</p>
+    <div class="breadcrumb">
+        <a href="index.html">Home</a><span>/</span>
+        <a href="target-activities.html">Target Activities</a><span>/</span>
+        <span style="color:rgba(255,255,255,0.9);">Multivariate Test</span>
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="section">
+        <h2>What is a Multivariate Test (MVT)?</h2>
+        <p>A Multivariate Test identifies which combination of variations across multiple page elements produces the best outcome. Rather than testing one change at a time, MVT evaluates all combinations simultaneously, revealing both main effects and interaction effects between elements.</p>
+        <div class="info-grid">
+            <div class="info-box">
+                <h4>When to Use</h4>
+                <ul>
+                    <li>You want to optimize multiple page elements at once</li>
+                    <li>You suspect element interactions may matter</li>
+                    <li>You have enough traffic for factorial combinations</li>
+                    <li>Landing page or hero section optimization</li>
+                </ul>
+            </div>
+            <div class="info-box">
+                <h4>Key Characteristics</h4>
+                <ul>
+                    <li>Full-factorial or partial-factorial design</li>
+                    <li>Measures element contribution (importance)</li>
+                    <li>Finds optimal combination of elements</li>
+                    <li>Requires higher traffic than A/B tests</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>How It Works</h2>
+        <div class="how-it-works">
+            <div class="step"><div class="step-num">1</div><div class="step-label">Identify elements to test</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-label">Create variations per element</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-label">System generates all combos</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-label">Traffic split across combos</div></div>
+            <div class="step"><div class="step-num">5</div><div class="step-label">Analyze contribution & winner</div></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>🧪 Live Demo — Element Combination Testing</h2>
+        <p>Select variations for each element to build a combination, then run the test to see simulated conversion rates for all possible combinations. The test reveals which elements have the most impact and which combo wins.</p>
+
+        <div class="demo-area">
+            <h3>▶ Page Elements & Variations</h3>
+            <div class="editor-grid">
+                <div class="element-group">
+                    <h4>📝 Headline</h4>
+                    <button class="variation-btn selected" onclick="selectVar('headline',0)" id="h0">A: Summer Sale — Up to 50% Off</button>
+                    <button class="variation-btn" onclick="selectVar('headline',1)" id="h1">B: Your Next Adventure Starts Here</button>
+                    <button class="variation-btn" onclick="selectVar('headline',2)" id="h2">C: Trusted by 1M+ Customers</button>
+                </div>
+                <div class="element-group">
+                    <h4>🖼️ Hero Image</h4>
+                    <button class="variation-btn selected" onclick="selectVar('image',0)" id="i0">A: 🏖️ Beach Scene</button>
+                    <button class="variation-btn" onclick="selectVar('image',1)" id="i1">B: 🏔️ Mountain Scene</button>
+                    <button class="variation-btn" onclick="selectVar('image',2)" id="i2">C: 🌃 City Scene</button>
+                </div>
+                <div class="element-group">
+                    <h4>🔘 CTA Button</h4>
+                    <button class="variation-btn selected" onclick="selectVar('cta',0)" id="c0">A: "Shop Now" (Blue)</button>
+                    <button class="variation-btn" onclick="selectVar('cta',1)" id="c1">B: "Get Started" (Green)</button>
+                    <button class="variation-btn" onclick="selectVar('cta',2)" id="c2">C: "Claim Offer" (Orange)</button>
+                </div>
+            </div>
+
+            <div class="combo-indicator">
+                <div class="combo-label">Current Combination</div>
+                <div class="combo-formula" id="comboFormula">Headline A × Image A × CTA A</div>
+                <div class="combo-total">3 × 3 × 3 = <strong>27 total combinations</strong></div>
+            </div>
+
+            <h3>▶ Live Preview</h3>
+            <div class="preview-box" id="previewBox">
+                <div class="pv-hero" id="pvHero" style="background:linear-gradient(135deg,#1e40af,#3b82f6)">
+                    <div class="pv-headline" id="pvHeadline">Summer Sale — Up to 50% Off</div>
+                    <div class="pv-sub">Explore our curated collection</div>
+                </div>
+                <div class="pv-img" id="pvImg">🏖️</div>
+                <div class="pv-cta-area">
+                    <button class="pv-cta" id="pvCta" style="background:#3b82f6;color:#fff">Shop Now</button>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat"><div class="val" id="sTotalVis">0</div><div class="lbl">Total Visitors</div></div>
+                <div class="stat"><div class="val" id="sBestCombo">—</div><div class="lbl">Best Combo</div></div>
+                <div class="stat"><div class="val" id="sBestCvr">—</div><div class="lbl">Best CVR</div></div>
+                <div class="stat"><div class="val" id="sLift">—</div><div class="lbl">Lift vs Control</div></div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="runTest()">🧪 Run MVT Simulation</button>
+                <button class="btn btn-secondary" onclick="randomCombo()">🎲 Randomize Selection</button>
+                <button class="btn btn-danger" onclick="resetDemo()">↺ Reset</button>
+            </div>
+
+            <div id="resultsArea" style="display:none">
+                <h3 style="margin-top:1.5rem">▶ Top 10 Combinations (of 27)</h3>
+                <table class="results-table">
+                    <thead><tr><th>#</th><th>Headline</th><th>Image</th><th>CTA</th><th>Visitors</th><th>CVR</th><th></th></tr></thead>
+                    <tbody id="resultsBody"></tbody>
+                </table>
+
+                <h3 style="margin-top:1.5rem">▶ Element Contribution</h3>
+                <div id="contributionArea"></div>
+            </div>
+
+            <div class="log" id="log"><div class="log-entry"><em>Select element variations and run the MVT simulation…</em></div></div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <a href="index.html">← All Demos</a> · <a href="target-activities.html">Target Activities</a> ·
+    <a href="https://experienceleague.adobe.com/en/docs/target/using/activities/multivariate-test/multivariate-testing" target="_blank" rel="noopener">Official Docs ↗</a>
+</footer>
+
+<script src="scripts/log.js"></script>
+<script>
+const headlines = [
+    {label:'A: Summer Sale',short:'A',text:'Summer Sale — Up to 50% Off'},
+    {label:'B: Adventure',short:'B',text:'Your Next Adventure Starts Here'},
+    {label:'C: Social Proof',short:'C',text:'Trusted by 1M+ Customers'}
+];
+const images = [
+    {label:'A: Beach',short:'A',icon:'🏖️'},
+    {label:'B: Mountain',short:'B',icon:'🏔️'},
+    {label:'C: City',short:'C',icon:'🌃'}
+];
+const ctas = [
+    {label:'A: Shop Now',short:'A',text:'Shop Now',bg:'#3b82f6',color:'#fff'},
+    {label:'B: Get Started',short:'B',text:'Get Started',bg:'#10b981',color:'#fff'},
+    {label:'C: Claim Offer',short:'C',text:'Claim Offer',bg:'#f59e0b',color:'#000'}
+];
+
+// True conversion uplifts (hidden from user, used for simulation)
+const hEffect = [0, 0.015, 0.008]; // headline effect
+const iEffect = [0, 0.005, -0.003]; // image effect
+const cEffect = [0, 0.012, 0.022]; // cta effect
+const baseCvr = 0.085;
+
+// Interactions
+const interactions = {
+    '1_2': 0.01,  // Adventure + Mountain synergy
+    '2_2': 0.008, // Social Proof + City synergy
+    '0_0': 0,     // baseline
+};
+
+let sel = {headline:0,image:0,cta:0};
+
+function selectVar(element, idx) {
+    sel[element] = idx;
+    const prefix = element === 'headline' ? 'h' : element === 'image' ? 'i' : 'c';
+    for (let j=0;j<3;j++) document.getElementById(prefix+j).classList.remove('selected');
+    document.getElementById(prefix+idx).classList.add('selected');
+    updatePreview();
+}
+
+function updatePreview() {
+    document.getElementById('pvHeadline').textContent = headlines[sel.headline].text;
+    document.getElementById('pvImg').textContent = images[sel.image].icon;
+    document.getElementById('pvCta').textContent = ctas[sel.cta].text;
+    document.getElementById('pvCta').style.background = ctas[sel.cta].bg;
+    document.getElementById('pvCta').style.color = ctas[sel.cta].color;
+    document.getElementById('comboFormula').textContent =
+        `Headline ${headlines[sel.headline].short} × Image ${images[sel.image].short} × CTA ${ctas[sel.cta].short}`;
+}
+
+function getComboRate(h,i,c) {
+    let rate = baseCvr + hEffect[h] + iEffect[i] + cEffect[c];
+    const key = h+'_'+i;
+    if (interactions[key]) rate += interactions[key];
+    return rate;
+}
+
+function runTest() {
+    const results = [];
+    const visitorsPerCombo = 300 + Math.floor(Math.random()*200);
+
+    for (let h=0;h<3;h++) {
+        for (let i=0;i<3;i++) {
+            for (let c=0;c<3;c++) {
+                const trueRate = getComboRate(h,i,c);
+                const visitors = visitorsPerCombo + Math.floor(Math.random()*100-50);
+                const conversions = Math.floor(visitors * (trueRate + (Math.random()*0.015-0.0075)));
+                const cvr = conversions / visitors;
+                results.push({h,i,c,visitors,conversions,cvr,label:`H${headlines[h].short} I${images[i].short} C${ctas[c].short}`});
+            }
+        }
+    }
+
+    results.sort((a,b)=>b.cvr-a.cvr);
+    const totalVisitors = results.reduce((s,r)=>s+r.visitors,0);
+    const controlCvr = results.find(r=>r.h===0&&r.i===0&&r.c===0).cvr;
+    const best = results[0];
+
+    document.getElementById('sTotalVis').textContent = totalVisitors.toLocaleString();
+    document.getElementById('sBestCombo').textContent = best.label;
+    document.getElementById('sBestCvr').textContent = (best.cvr*100).toFixed(1)+'%';
+    const lift = ((best.cvr-controlCvr)/controlCvr*100);
+    document.getElementById('sLift').textContent = (lift>0?'+':'')+lift.toFixed(1)+'%';
+
+    // Show top 10
+    const maxCvr = results[0].cvr;
+    document.getElementById('resultsBody').innerHTML = results.slice(0,10).map((r,idx)=>{
+        const isWinner = idx===0;
+        const barW = (r.cvr/maxCvr*80);
+        return `<tr class="${isWinner?'winner':''}"><td>${idx+1}</td><td>${headlines[r.h].short}</td><td>${images[r.i].short}</td><td>${ctas[r.c].short}</td><td>${r.visitors}</td><td class="cvr">${(r.cvr*100).toFixed(2)}%</td><td><span class="mini-bar" style="width:${barW}px;${isWinner?'background:#4ade80':''}"></span></td></tr>`;
+    }).join('');
+
+    // Element contribution — average CVR by each variation
+    const contribution = {headline:[],image:[],cta:[]};
+    for (let v=0;v<3;v++) {
+        contribution.headline.push(avg(results.filter(r=>r.h===v)));
+        contribution.image.push(avg(results.filter(r=>r.i===v)));
+        contribution.cta.push(avg(results.filter(r=>r.c===v)));
+    }
+
+    const minC = Math.min(...Object.values(contribution).flat());
+    const maxC = Math.max(...Object.values(contribution).flat());
+    const range = maxC - minC || 1;
+
+    document.getElementById('contributionArea').innerHTML = ['headline','image','cta'].map(el => {
+        const labels = el==='headline'?headlines:el==='image'?images:ctas;
+        const vals = contribution[el];
+        const bestIdx = vals.indexOf(Math.max(...vals));
+        return `<div style="margin:0.75rem 0"><div style="font-size:0.82rem;color:#fbbf24;font-weight:600;margin-bottom:0.3rem">${el.charAt(0).toUpperCase()+el.slice(1)}</div>${
+            vals.map((v,j)=>{
+                const w = ((v-minC)/range*100);
+                return `<div style="display:flex;align-items:center;gap:0.5rem;padding:0.25rem 0;font-size:0.8rem;color:${j===bestIdx?'#4ade80':'#999'}"><span style="min-width:60px">${labels[j].short}</span><div style="flex:1;height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;max-width:200px"><div style="height:100%;width:${w}%;border-radius:3px;background:${j===bestIdx?'#4ade80':'#f59e0b'}"></div></div><span style="min-width:50px;font-weight:600">${(v*100).toFixed(2)}%</span></div>`;
+            }).join('')
+        }</div>`;
+    }).join('');
+
+    document.getElementById('resultsArea').style.display = 'block';
+    logMsg('test', `MVT simulation complete: ${totalVisitors.toLocaleString()} visitors across 27 combinations`);
+    logMsg('winner', `Best combo: ${best.label} at ${(best.cvr*100).toFixed(2)}% CVR (${lift>0?'+':''}${lift.toFixed(1)}% lift vs control)`);
+}
+
+function avg(arr) { return arr.reduce((s,r)=>s+r.cvr,0)/arr.length; }
+
+function randomCombo() {
+    selectVar('headline', Math.floor(Math.random()*3));
+    selectVar('image', Math.floor(Math.random()*3));
+    selectVar('cta', Math.floor(Math.random()*3));
+}
+
+function resetDemo() {
+    sel = {headline:0,image:0,cta:0};
+    for(let j=0;j<3;j++){document.getElementById('h'+j).classList.remove('selected');document.getElementById('i'+j).classList.remove('selected');document.getElementById('c'+j).classList.remove('selected')}
+    document.getElementById('h0').classList.add('selected');
+    document.getElementById('i0').classList.add('selected');
+    document.getElementById('c0').classList.add('selected');
+    updatePreview();
+    document.getElementById('sTotalVis').textContent='0';
+    document.getElementById('sBestCombo').textContent='—';
+    document.getElementById('sBestCvr').textContent='—';
+    document.getElementById('sLift').textContent='—';
+    document.getElementById('resultsArea').style.display='none';
+    document.getElementById('log').innerHTML='<div class="log-entry"><em>Reset. Configure elements and run the MVT simulation…</em></div>';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+/* ============================================
+   Let's Run a Test — Shared Demo Page Styles
+   ============================================
+   Override CSS custom properties per page to
+   set accent colors and page-specific theming.
+   ============================================ */
+
+/* --- Default Custom Properties --- */
+:root {
+    --accent: #667eea;
+    --accent-dark: #764ba2;
+    --accent-light: #667eea;
+    --checkmark-color: var(--accent-light);
+    --badge-bg: var(--accent);
+    --badge-color: #fff;
+    --btn-primary-color: #fff;
+    --accent-shadow: rgba(102, 126, 234, 0.4);
+    --container-max-width: 960px;
+}
+
+/* === Reset === */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* === Base === */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    background: #0f0f1a;
+    color: #e0e0e0;
+    line-height: 1.6;
+}
+
+/* === Page Header === */
+.page-header {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+    padding: 3rem 2rem;
+    text-align: center;
+}
+.page-header h1 { font-size: 2.25rem; color: #fff; margin-bottom: 0.5rem; }
+.page-header p {
+    font-size: 1.05rem; color: rgba(255,255,255,0.85);
+    max-width: 700px; margin: 0 auto;
+}
+
+/* === Breadcrumb === */
+.breadcrumb {
+    display: flex; gap: 0.5rem; justify-content: center;
+    margin-top: 1rem; font-size: 0.85rem;
+}
+.breadcrumb a { color: rgba(255,255,255,0.7); text-decoration: none; }
+.breadcrumb a:hover { color: #fff; }
+.breadcrumb span { color: rgba(255,255,255,0.4); }
+
+/* === Badge === */
+.badge {
+    display: inline-block; font-size: 0.7rem; padding: 0.15rem 0.5rem;
+    border-radius: 4px; margin-left: 0.5rem; font-weight: 600;
+    text-transform: uppercase; vertical-align: middle;
+    background: var(--badge-bg); color: var(--badge-color);
+}
+
+/* === Container === */
+.container {
+    max-width: var(--container-max-width);
+    margin: 0 auto; padding: 2rem 1.5rem 4rem;
+}
+
+/* === Section === */
+.section {
+    background: #1a1a2e; border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px; padding: 2rem; margin-bottom: 2rem;
+}
+.section h2 { font-size: 1.3rem; color: #fff; margin-bottom: 0.75rem; }
+.section h3 {
+    font-size: 0.8rem; color: #bbb; margin-bottom: 0.5rem;
+    text-transform: uppercase; letter-spacing: 0.05em;
+}
+.section p { color: #999; font-size: 0.9rem; margin-bottom: 1rem; }
+
+/* === Info Grid === */
+.info-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 1rem; margin-bottom: 1.5rem;
+}
+.info-box { background: rgba(255,255,255,0.04); border-radius: 10px; padding: 1rem; }
+.info-box h4 { font-size: 0.85rem; color: var(--accent-light); margin-bottom: 0.4rem; }
+.info-box p { font-size: 0.82rem; color: #aaa; margin: 0; }
+.info-box ul { list-style: none; padding: 0; }
+.info-box ul li { font-size: 0.82rem; color: #aaa; padding: 0.2rem 0; }
+.info-box ul li::before { content: "✓ "; color: var(--checkmark-color); }
+
+/* === How It Works / Steps === */
+.how-it-works {
+    display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+}
+.step {
+    flex: 1; min-width: 120px; background: rgba(255,255,255,0.04);
+    border-radius: 10px; padding: 1rem; text-align: center; position: relative;
+}
+.step::after {
+    content: "→"; position: absolute; right: -14px; top: 50%;
+    transform: translateY(-50%); color: #555; font-size: 1.2rem;
+}
+.step:last-child::after { display: none; }
+.step-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--accent); color: var(--btn-primary-color);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem; font-weight: 700; margin: 0 auto 0.5rem;
+}
+.step-label { font-size: 0.78rem; color: #bbb; }
+
+/* === Demo Area === */
+.demo-area {
+    background: #111125; border-radius: 12px; padding: 1.5rem;
+    border: 1px solid rgba(255,255,255,0.06);
+}
+.demo-area h3 {
+    font-size: 0.8rem; text-transform: uppercase;
+    letter-spacing: 0.08em; color: #888; margin-bottom: 1rem;
+}
+
+/* === Stats Row === */
+.stats-row {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem; margin: 1rem 0;
+}
+.stat {
+    background: rgba(255,255,255,0.04); border-radius: 8px;
+    padding: 0.75rem; text-align: center;
+}
+.stat .val { font-size: 1.3rem; font-weight: 700; color: #fff; }
+.stat .lbl { font-size: 0.7rem; color: #888; text-transform: uppercase; }
+
+/* === Buttons === */
+.btn {
+    border: none; color: #fff; padding: 0.6rem 1.3rem; border-radius: 8px;
+    cursor: pointer; font-size: 0.88rem; font-weight: 600; transition: all 0.25s;
+}
+.btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    color: var(--btn-primary-color);
+}
+.btn-primary:hover {
+    box-shadow: 0 4px 15px var(--accent-shadow);
+    transform: translateY(-1px);
+}
+.btn-secondary {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+.btn-secondary:hover { background: rgba(255,255,255,0.15); }
+.btn-danger {
+    background: rgba(239,68,68,0.2);
+    border: 1px solid rgba(239,68,68,0.3); color: #ef4444;
+}
+.btn-danger:hover { background: rgba(239,68,68,0.3); }
+.btn-success { background: linear-gradient(135deg, #10b981, #059669); }
+.btn-success:hover {
+    box-shadow: 0 4px 15px rgba(16,185,129,0.4);
+    transform: translateY(-1px);
+}
+.btn-group { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+
+/* === Event Log === */
+.log {
+    margin-top: 1rem; background: rgba(0,0,0,0.3); border-radius: 8px;
+    padding: 0.75rem; max-height: 180px; overflow-y: auto;
+    font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.78rem;
+}
+.log-entry {
+    padding: 0.3rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04); color: #999;
+}
+.log-entry:last-child { border-bottom: none; }
+.log-entry .t { color: #4ade80; }
+.log-entry .a { color: #fbbf24; }
+.log-entry .w { color: #4ade80; font-weight: 700; }
+.log-entry .l { color: #ef4444; }
+.log-entry .i { color: #3b82f6; }
+
+/* === Footer === */
+footer {
+    text-align: center; padding: 2rem; color: #555;
+    font-size: 0.85rem; border-top: 1px solid rgba(255,255,255,0.05);
+}
+footer a { color: #667eea; text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+/* === Responsive === */
+@media (max-width: 768px) {
+    .info-grid { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .how-it-works { flex-direction: column; }
+    .step::after {
+        content: "↓"; right: auto; bottom: -14px; top: auto;
+        left: 50%; transform: translateX(-50%);
+    }
+}

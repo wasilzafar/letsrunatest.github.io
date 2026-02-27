@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto-Allocate Demo — Adobe Target | Let's Run a Test</title>
+    <link rel="stylesheet" href="styles/common.css">
+    <style>
+        :root{--accent:#10b981;--accent-dark:#059669;--accent-light:#10b981;--checkmark-color:#4ade80;--badge-bg:#7c3aed;--accent-shadow:rgba(16,185,129,0.4)}
+        .variants-row{display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap}
+        .variant{flex:1;min-width:160px;background:rgba(255,255,255,0.04);border:2px solid transparent;border-radius:10px;padding:1.25rem;text-align:center;transition:all 0.3s;position:relative}
+        .variant.winner{border-color:#4ade80;background:rgba(74,222,128,0.06)}
+        .variant.winner::after{content:"🏆 Winner";position:absolute;top:-10px;right:10px;background:#4ade80;color:#000;padding:0.15rem 0.5rem;border-radius:4px;font-size:0.7rem;font-weight:700}
+        .variant-label{font-weight:700;font-size:0.85rem;color:#aaa;margin-bottom:0.5rem}
+        .variant-cta{display:inline-block;padding:0.5rem 1.25rem;border-radius:6px;font-weight:600;font-size:0.9rem;margin-bottom:0.75rem;color:#fff}
+        .stat-row{display:flex;justify-content:space-between;font-size:0.8rem;color:#aaa;margin-top:0.25rem}
+        .bar-container{height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;margin-top:0.5rem}
+        .bar-fill{height:100%;border-radius:3px;transition:width 1s ease}
+        .alloc-section{margin:1rem 0}
+        .alloc-section label{font-size:0.85rem;color:#aaa;display:block;margin-bottom:0.5rem}
+        .alloc-bar{display:flex;height:36px;border-radius:8px;overflow:hidden;margin-bottom:0.25rem}
+        .alloc-seg{display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#fff;transition:width 0.8s ease}
+        .alloc-legend{display:flex;gap:1rem;font-size:0.78rem;color:#aaa}
+        .alloc-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:0.3rem;vertical-align:middle}
+        .round-indicator{display:flex;gap:0.5rem;margin:1rem 0;flex-wrap:wrap}
+        .round-dot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;background:rgba(255,255,255,0.06);color:#666;transition:all 0.3s}
+        .round-dot.active{background:#10b981;color:#fff}
+        .round-dot.done{background:rgba(16,185,129,0.3);color:#10b981}
+        .chart-area{margin:1rem 0;height:200px;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid rgba(255,255,255,0.06);position:relative;overflow:hidden}
+        .chart-area canvas{width:100%;height:100%}
+        .controls{display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;margin-top:1rem;padding:0.75rem;background:rgba(255,255,255,0.03);border-radius:8px}
+        .controls label{font-size:0.85rem;color:#aaa;white-space:nowrap}
+        .controls select{background:#1a1a2e;border:1px solid rgba(255,255,255,0.15);color:#ddd;padding:0.4rem 0.6rem;border-radius:6px;font-size:0.82rem}
+        .compare-box{background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.1);border-radius:10px;padding:1rem;margin:1rem 0;font-size:0.85rem;color:#bbb}
+        .compare-box h4{color:#f59e0b;font-size:0.85rem;margin-bottom:0.5rem}
+        @media(max-width:768px){.variants-row{flex-direction:column}}
+    </style>
+</head>
+<body>
+
+<div class="page-header">
+    <h1>⚖️ Auto-Allocate <span class="badge">ML-Powered</span></h1>
+    <p>Automatically shifts more traffic to the best-performing experience as data accumulates — maximizing conversions during the test, not just after.</p>
+    <div class="breadcrumb">
+        <a href="index.html">Home</a><span>/</span>
+        <a href="target-activities.html">Target Activities</a><span>/</span>
+        <span style="color:rgba(255,255,255,0.9);">Auto-Allocate</span>
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="section">
+        <h2>What is Auto-Allocate?</h2>
+        <p>Auto-Allocate is an A/B test that uses a multi-armed bandit approach to automatically redirect traffic toward the winning experience as it collects data. Unlike traditional A/B tests, you don't have to wait until the test ends to benefit from the winner.</p>
+        <div class="info-grid">
+            <div class="info-box">
+                <h4>When to Use</h4>
+                <ul>
+                    <li>You want faster results than traditional A/B</li>
+                    <li>You have a clear single success metric</li>
+                    <li>Opportunity cost of showing a loser is high</li>
+                    <li>You want to maximize conversions during the test</li>
+                </ul>
+            </div>
+            <div class="info-box">
+                <h4>Key Characteristics</h4>
+                <ul>
+                    <li>Multi-armed bandit algorithm</li>
+                    <li>Traffic shifts automatically toward winner</li>
+                    <li>Faster convergence than manual A/B</li>
+                    <li>Always reserves exploration traffic (~10%)</li>
+                </ul>
+            </div>
+        </div>
+        <div class="compare-box">
+            <h4>⚡ Auto-Allocate vs Traditional A/B</h4>
+            In a traditional A/B test, traffic stays 50/50 even when one variant is clearly winning. Auto-Allocate detects this early and shifts up to 90% of traffic to the leader — reducing opportunity cost and converging faster by sending more visitors through the best experience.
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>How It Works</h2>
+        <div class="how-it-works">
+            <div class="step"><div class="step-num">1</div><div class="step-label">Start with even traffic split</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-label">Collect conversion data each round</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-label">Multi-armed bandit recalculates</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-label">Traffic shifts toward leader</div></div>
+            <div class="step"><div class="step-num">5</div><div class="step-label">Winner gets 90%+ traffic</div></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>🧪 Live Demo — Watch Traffic Shift in Real Time</h2>
+        <p>Each experience has a hidden true conversion rate. Run rounds to see how the bandit algorithm detects the winner and progressively shifts traffic.</p>
+
+        <div class="demo-area">
+            <h3>▶ Experiences</h3>
+            <div class="variants-row">
+                <div class="variant" id="v-a"><div class="variant-label">Experience A</div><div class="variant-cta" style="background:#10b981">Free Shipping</div><div class="stat-row"><span>Views: <strong id="s-a-v">0</strong></span><span>Conv: <strong id="s-a-c">0</strong></span></div><div class="bar-container"><div class="bar-fill" id="bar-a" style="width:0%;background:#10b981"></div></div><div class="stat-row"><span>Rate: <strong id="s-a-r">0%</strong></span></div></div>
+                <div class="variant" id="v-b"><div class="variant-label">Experience B</div><div class="variant-cta" style="background:#f59e0b">Save 15% Today</div><div class="stat-row"><span>Views: <strong id="s-b-v">0</strong></span><span>Conv: <strong id="s-b-c">0</strong></span></div><div class="bar-container"><div class="bar-fill" id="bar-b" style="width:0%;background:#f59e0b"></div></div><div class="stat-row"><span>Rate: <strong id="s-b-r">0%</strong></span></div></div>
+                <div class="variant" id="v-c"><div class="variant-label">Experience C</div><div class="variant-cta" style="background:#8b5cf6">BOGO Deal</div><div class="stat-row"><span>Views: <strong id="s-c-v">0</strong></span><span>Conv: <strong id="s-c-c">0</strong></span></div><div class="bar-container"><div class="bar-fill" id="bar-c" style="width:0%;background:#8b5cf6"></div></div><div class="stat-row"><span>Rate: <strong id="s-c-r">0%</strong></span></div></div>
+            </div>
+
+            <!-- Traffic Allocation -->
+            <div class="alloc-section">
+                <label>Traffic Allocation (shifts each round):</label>
+                <div class="alloc-bar" id="allocBar">
+                    <div class="alloc-seg" id="alloc-a" style="width:33.3%;background:#10b981;">A: 33%</div>
+                    <div class="alloc-seg" id="alloc-b" style="width:33.3%;background:#f59e0b;">B: 33%</div>
+                    <div class="alloc-seg" id="alloc-c" style="width:33.4%;background:#8b5cf6;">C: 34%</div>
+                </div>
+                <div class="alloc-legend">
+                    <span><span class="alloc-dot" style="background:#10b981"></span>A — Free Shipping</span>
+                    <span><span class="alloc-dot" style="background:#f59e0b"></span>B — Save 15%</span>
+                    <span><span class="alloc-dot" style="background:#8b5cf6"></span>C — BOGO</span>
+                </div>
+            </div>
+
+            <!-- Round indicators -->
+            <label style="font-size:0.82rem;color:#888;">Rounds:</label>
+            <div class="round-indicator" id="roundDots"></div>
+
+            <!-- Chart -->
+            <div class="chart-area"><canvas id="chartCanvas"></canvas></div>
+
+            <div class="controls">
+                <label>Visitors per Round:</label>
+                <select id="batchSize">
+                    <option value="50">50</option>
+                    <option value="100" selected>100</option>
+                    <option value="200">200</option>
+                </select>
+                <label>Total Rounds:</label>
+                <select id="totalRounds">
+                    <option value="8">8</option>
+                    <option value="12" selected>12</option>
+                    <option value="20">20</option>
+                </select>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="runOneRound()">▶ Run 1 Round</button>
+                <button class="btn btn-primary" onclick="runAllRounds()">⏩ Run All Rounds</button>
+                <button class="btn btn-danger" onclick="resetDemo()">↺ Reset</button>
+            </div>
+
+            <div class="log" id="log"><div class="log-entry"><em>Click "Run 1 Round" to see the bandit in action…</em></div></div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <a href="index.html">← All Demos</a> · <a href="target-activities.html">Target Activities</a> ·
+    <a href="https://experienceleague.adobe.com/en/docs/target/using/activities/auto-allocate/auto-allocate" target="_blank" rel="noopener">Official Docs ↗</a>
+</footer>
+
+<script src="scripts/log.js"></script>
+<script>
+const d = {
+    a: { views:0, conv:0, trueRate:0.11, history:[], allocHistory:[] },
+    b: { views:0, conv:0, trueRate:0.22, history:[], allocHistory:[] },
+    c: { views:0, conv:0, trueRate:0.15, history:[], allocHistory:[] }
+};
+let alloc = {a:33.3, b:33.3, c:33.4};
+let round = 0, running = false;
+const variants = ['a','b','c'];
+const colors = {a:'#10b981',b:'#f59e0b',c:'#8b5cf6'};
+
+function runOneRound() {
+    if (running) return;
+    const maxRounds = parseInt(document.getElementById('totalRounds').value);
+    if (round >= maxRounds) { logMsg('done','All rounds complete!'); return; }
+    round++;
+    const n = parseInt(document.getElementById('batchSize').value);
+    for (let i = 0; i < n; i++) {
+        const roll = Math.random()*100;
+        let v;
+        if (roll < alloc.a) v = 'a'; else if (roll < alloc.a+alloc.b) v = 'b'; else v = 'c';
+        d[v].views++;
+        if (Math.random() < d[v].trueRate) d[v].conv++;
+    }
+    // Record history
+    variants.forEach(v => {
+        d[v].history.push(d[v].views > 0 ? d[v].conv/d[v].views : 0);
+        d[v].allocHistory.push(alloc[v]);
+    });
+    // Bandit recalculation
+    recalcAlloc();
+    updateUI();
+    drawChart();
+    updateRoundDots();
+    const rates = variants.map(v => (d[v].views>0?(d[v].conv/d[v].views*100).toFixed(1):'0')+'%');
+    logMsg('round', `Round ${round}: A=${rates[0]} B=${rates[1]} C=${rates[2]} | Alloc: A=${alloc.a.toFixed(0)}% B=${alloc.b.toFixed(0)}% C=${alloc.c.toFixed(0)}%`);
+    if (round >= maxRounds) declareWinner();
+}
+
+function runAllRounds() {
+    if (running) return;
+    running = true;
+    const maxRounds = parseInt(document.getElementById('totalRounds').value);
+    const interval = setInterval(() => {
+        runOneRound();
+        if (round >= maxRounds) { clearInterval(interval); running = false; }
+    }, 400);
+}
+
+function recalcAlloc() {
+    const rates = {};
+    let total = 0;
+    const exploration = Math.max(0.10, 0.35 - round * 0.025);
+    variants.forEach(v => {
+        rates[v] = d[v].views > 0 ? d[v].conv/d[v].views : 0;
+        total += rates[v];
+    });
+    if (total > 0) {
+        variants.forEach(v => {
+            alloc[v] = (1-exploration) * (rates[v]/total) * 100 + exploration * 33.3;
+        });
+        const sum = alloc.a+alloc.b+alloc.c;
+        variants.forEach(v => alloc[v] = (alloc[v]/sum)*100);
+    }
+}
+
+function declareWinner() {
+    const rates = variants.map(v => d[v].views>0 ? d[v].conv/d[v].views : 0);
+    const bestIdx = rates.indexOf(Math.max(...rates));
+    const best = variants[bestIdx];
+    document.getElementById('v-'+best).classList.add('winner');
+    logMsg('winner', `🏆 Experience ${best.toUpperCase()} wins with ${(rates[bestIdx]*100).toFixed(1)}% conversion! Final allocation: ${alloc[best].toFixed(0)}% traffic`);
+}
+
+function resetDemo() {
+    running = false; round = 0;
+    variants.forEach(v => { d[v].views=0; d[v].conv=0; d[v].history=[]; d[v].allocHistory=[]; });
+    alloc = {a:33.3,b:33.3,c:33.4};
+    variants.forEach(v => document.getElementById('v-'+v).classList.remove('winner'));
+    updateUI(); drawChart(); updateRoundDots();
+    document.getElementById('log').innerHTML = '<div class="log-entry"><em>Reset. Ready to run…</em></div>';
+}
+
+function updateUI() {
+    const maxRate = Math.max(...variants.map(v => d[v].views>0 ? d[v].conv/d[v].views : 0), 0.001);
+    variants.forEach(v => {
+        const rate = d[v].views>0 ? d[v].conv/d[v].views : 0;
+        document.getElementById('s-'+v+'-v').textContent = d[v].views;
+        document.getElementById('s-'+v+'-c').textContent = d[v].conv;
+        document.getElementById('s-'+v+'-r').textContent = (rate*100).toFixed(1)+'%';
+        document.getElementById('bar-'+v).style.width = ((rate/maxRate)*100)+'%';
+    });
+    // Allocation bar
+    variants.forEach(v => {
+        const el = document.getElementById('alloc-'+v);
+        el.style.width = alloc[v]+'%';
+        el.textContent = v.toUpperCase()+': '+alloc[v].toFixed(0)+'%';
+    });
+}
+
+function updateRoundDots() {
+    const max = parseInt(document.getElementById('totalRounds').value);
+    let html = '';
+    for (let i = 1; i <= max; i++) {
+        const cls = i < round ? 'done' : i === round ? 'active' : '';
+        html += `<div class="round-dot ${cls}">${i}</div>`;
+    }
+    document.getElementById('roundDots').innerHTML = html;
+}
+
+function drawChart() {
+    const canvas = document.getElementById('chartCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = canvas.parentElement.clientHeight;
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0,0,w,h);
+    // Draw allocation over time
+    const maxLen = Math.max(...variants.map(v => d[v].allocHistory.length), 1);
+    // Stacked area
+    if (d.a.allocHistory.length > 0) {
+        const order = ['a','b','c'];
+        for (let stack = order.length-1; stack >= 0; stack--) {
+            ctx.beginPath();
+            ctx.fillStyle = colors[order[stack]] + '44';
+            ctx.strokeStyle = colors[order[stack]];
+            ctx.lineWidth = 2;
+            for (let i = 0; i < maxLen; i++) {
+                let cumul = 0;
+                for (let s = 0; s <= stack; s++) cumul += d[order[s]].allocHistory[i] || 0;
+                const x = 30 + (i/(maxLen-1||1))*(w-40);
+                const y = h*0.95 - (cumul/100)*(h*0.85);
+                if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+            }
+            // Close
+            ctx.lineTo(30+(maxLen-1)/(maxLen-1||1)*(w-40), h*0.95);
+            ctx.lineTo(30, h*0.95);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        }
+    }
+    // Labels
+    ctx.fillStyle='#555';ctx.font='10px sans-serif';ctx.textAlign='right';
+    ['100%','50%','0%'].forEach((l,i) => ctx.fillText(l, 28, h*0.1+i*(h*0.85/2)));
+    // Legend
+    ['A','B','C'].forEach((l,i) => {
+        const x = 40+i*80;
+        ctx.fillStyle=colors[l.toLowerCase()]; ctx.fillRect(x,6,10,10);
+        ctx.fillStyle='#aaa';ctx.font='11px sans-serif';ctx.textAlign='left';ctx.fillText(l,x+14,16);
+    });
+}
+
+updateRoundDots();
+window.addEventListener('resize', drawChart);
+</script>
+</body>
+</html>
