@@ -47,12 +47,80 @@
         .algo-desc strong{color:#fbbf24}
 
         @media(max-width:768px){.current-product{flex-direction:column;text-align:center}}
+
+        /* Experience Composers comparison */
+        .composer-compare{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:1rem}
+        .composer-card{background:rgba(255,255,255,0.03);border:2px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.5rem;transition:border-color 0.3s}
+        .composer-card.card-vec{border-color:rgba(234,88,12,0.3)}
+        .composer-card.card-form{border-color:rgba(251,191,36,0.3)}
+        .composer-card h4{font-size:0.95rem;color:#fff;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.5rem}
+        .composer-card ul{list-style:none;padding:0;margin:0}
+        .composer-card li{padding:0.3rem 0;font-size:0.85rem;color:#aaa;padding-left:1.2rem;position:relative}
+        .composer-card li::before{content:"→";position:absolute;left:0;color:var(--accent)}
+
+        /* VEC Hero */
+        .vec-hero{background:linear-gradient(135deg,#3d1e08 0%,#1a0d04 50%,#331a07 100%);border-radius:16px;overflow:hidden;padding:3rem 2.5rem;text-align:center;position:relative;margin-bottom:1.5rem;border:2px solid rgba(234,88,12,0.15);transition:all 0.5s}
+        .vec-hero.vec-modified{border-color:#ea580c;box-shadow:0 0 30px rgba(234,88,12,0.15)}
+        .vec-hero-eyebrow{font-size:0.75rem;text-transform:uppercase;letter-spacing:0.15em;color:#fb923c;margin-bottom:0.75rem;font-weight:600}
+        .vec-hero h2{font-size:2rem;color:#fff;margin-bottom:0.75rem;line-height:1.3}
+        .vec-hero .vec-hero-sub{font-size:1.05rem;color:rgba(255,255,255,0.7);margin-bottom:1.5rem;max-width:500px;margin-left:auto;margin-right:auto}
+        .vec-cta{display:inline-block;padding:0.75rem 2rem;background:#ea580c;color:#fff;border-radius:8px;font-weight:700;font-size:1rem;text-decoration:none;transition:all 0.3s;cursor:pointer;border:none}
+        .vec-cta:hover{background:#c2410c;transform:translateY(-2px);box-shadow:0 4px 15px rgba(234,88,12,0.4)}
+        .vec-selector-row{display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;margin-top:1.75rem;padding-top:1.25rem;border-top:1px solid rgba(255,255,255,0.06)}
+        .vec-selector-badge{font-size:0.68rem;background:rgba(234,88,12,0.12);border:1px solid rgba(234,88,12,0.25);color:#fdba74;padding:0.2rem 0.5rem;border-radius:4px;font-family:'SF Mono','Fira Code',monospace}
+        .vec-status{display:inline-flex;align-items:center;gap:0.5rem;font-size:0.82rem;color:#888;background:rgba(255,255,255,0.03);padding:0.4rem 0.8rem;border-radius:6px;margin-bottom:1rem}
+        .vec-dot{width:8px;height:8px;border-radius:50%;background:#555;transition:background 0.3s;flex-shrink:0}
+        .vec-dot.active{background:#4ade80}
+        .vec-dot.pending{background:#fbbf24;animation:vecPulse 1.5s ease-in-out infinite}
+        @keyframes vecPulse{0%,100%{opacity:1}50%{opacity:0.4}}
+        .config-block{background:rgba(0,0,0,0.3);border-radius:8px;padding:1rem;margin-top:1rem;font-family:'SF Mono','Fira Code',monospace;font-size:0.78rem;color:#aaa;overflow-x:auto}
+        .config-block .key{color:#fbbf24}
+        .config-block .val{color:#4ade80}
+        .config-block .comment{color:#555}
+
+        @media(max-width:768px){.composer-compare{grid-template-columns:1fr}.vec-hero{padding:2rem 1.5rem}.vec-hero h2{font-size:1.5rem}}
     </style>
+
+    <!-- Alloy Web SDK Inline Stub -->
+    <script>
+        !function (n, o) {
+            o.forEach(function (o) {
+                n[o] || ((n.__alloyNS = n.__alloyNS ||
+                    []).push(o), n[o] = function () {
+                        var u = arguments; return new Promise(
+                            function (i, l) { n.setTimeout(function () { n[o].q.push([i, l, u]) }) })
+                    }, n[o].q = [])
+            })
+        }
+            (window, ["alloy"]);
+    </script>
+    <script src="https://cdn1.adoberesources.net/alloy/2.24.0/alloy.min.js" async></script>
+    <script>
+        alloy("configure", {
+            datastreamId: "f50c86ad-a830-4068-a224-a7548d3c3f8d",
+            orgId: "B504732B5D3B2A790A495ECF@AdobeOrg",
+            debugEnabled: true,
+            autoCollectPropositionInteractions: {
+                "AJO": "always",
+                "TGT": "always"
+            }
+        });
+        alloy("setConsent", {
+            consent: [{
+                standard: "Adobe",
+                version: "2.0",
+                value: {
+                    collect: { val: "y" },
+                    metadata: { time: new Date().toISOString() }
+                }
+            }]
+        });
+    </script>
 </head>
 <body>
 
 <div class="page-header">
-    <h1>📦 Recommendations <span class="badge">Algorithm-Based</span></h1>
+    <h1>📦 Recommendations <span class="badge">VEC + Algorithm-Based</span></h1>
     <p>Automatically suggest products or content based on visitor behavior, popularity, and similarity — powered by collaborative filtering and content-based algorithms.</p>
     <div class="breadcrumb">
         <a href="index.html">Home</a><span>/</span>
@@ -98,8 +166,73 @@
         </div>
     </div>
 
+    <!-- Experience Composers -->
     <div class="section">
-        <h2>🧪 Live Demo — Product Recommendations</h2>
+        <h2>📐 Experience Composers</h2>
+        <p>Adobe Target Recommendations can be delivered via either the VEC (using design templates) or the Form-Based composer (for custom rendering). Both approaches use the same recommendation algorithms.</p>
+        <div class="composer-compare">
+            <div class="composer-card card-vec">
+                <h4>🎨 Visual Experience Composer (VEC)</h4>
+                <ul>
+                    <li>WYSIWYG editor — place recommendation designs visually</li>
+                    <li>Insert recommendation design into any page location</li>
+                    <li>Uses <code style="font-size:0.8rem;background:rgba(0,0,0,0.3);padding:0.1rem 0.3rem;border-radius:3px">renderDecisions: true</code></li>
+                    <li>SDK auto-renders recommendation carousel/grid</li>
+                    <li>Velocity templates for design customization</li>
+                    <li>Best for: visual recommendation placement on pages</li>
+                </ul>
+            </div>
+            <div class="composer-card card-form">
+                <h4>📝 Form-Based Experience Composer</h4>
+                <ul>
+                    <li>Non-visual — deliver recs data to named locations</li>
+                    <li>Uses custom <code style="font-size:0.8rem;background:rgba(0,0,0,0.3);padding:0.1rem 0.3rem;border-radius:3px">decisionScopes</code></li>
+                    <li>Raw JSON product data returned for custom rendering</li>
+                    <li>Full control over recommendation UI</li>
+                    <li>Supports custom templates & frameworks</li>
+                    <li>Best for: headless, SPAs, React/Vue components</li>
+                </ul>
+            </div>
+        </div>
+        <div class="config-block">
+            <span class="comment">// VEC: auto-render recommendation design</span><br>
+            alloy("<span class="key">sendEvent</span>", {<br>
+            &nbsp;&nbsp;<span class="key">renderDecisions</span>: <span class="val">true</span> <span class="comment">// SDK renders recommendation carousel/grid</span><br>
+            });
+        </div>
+    </div>
+
+    <!-- VEC Demo -->
+    <div class="section">
+        <h2>🎨 VEC Demo — Recommendation Hero</h2>
+        <p>The hero section below contains elements targetable via the <strong>Visual Experience Composer</strong>. In a Recommendations activity, the VEC places a design template (carousel, grid) that auto-renders with algorithm-selected products.</p>
+
+        <div class="demo-area">
+            <div class="vec-status">
+                <span class="vec-dot pending" id="vec-dot-rec"></span>
+                <span id="vec-status-rec">Waiting for VEC propositions…</span>
+            </div>
+
+            <div class="vec-hero" id="vec-hero-rec">
+                <div class="vec-hero-eyebrow">Recommended for You</div>
+                <h2 id="vec-headline-rec">Products You’ll Love</h2>
+                <p class="vec-hero-sub" id="vec-subtitle-rec">Powered by collaborative filtering and content-based algorithms — see products matched to your browsing behavior and preferences.</p>
+                <a class="vec-cta" id="vec-cta-rec" href="#" onclick="event.preventDefault(); logMsg('target','User clicked VEC hero CTA')">View Recommendations →</a>
+                <div class="vec-selector-row">
+                    <span class="vec-selector-badge">#vec-hero-rec</span>
+                    <span class="vec-selector-badge">#vec-headline-rec</span>
+                    <span class="vec-selector-badge">#vec-subtitle-rec</span>
+                    <span class="vec-selector-badge">#vec-cta-rec</span>
+                </div>
+            </div>
+
+            <p style="font-size:0.82rem;color:#888;margin-top:0.5rem">💡 Create a Recommendations activity in Adobe Target using the VEC. Insert a recommendation design template into the hero area, choose an algorithm (e.g. "Viewed Also Viewed"), and the SDK auto-renders the products via <code style="font-size:0.78rem;background:rgba(0,0,0,0.3);padding:0.1rem 0.3rem;border-radius:3px">renderDecisions: true</code>.</p>
+        </div>
+    </div>
+
+    <!-- Form-Based Simulation -->
+    <div class="section">
+        <h2>📝 Form-Based Simulation — Product Recommendations</h2>
         <p>Choose a product you're "viewing" and switch between recommendation algorithms to see how the results change. Each algorithm uses different signals to rank recommendations.</p>
 
         <div class="demo-area">
@@ -155,7 +288,9 @@
 
 <footer>
     <a href="index.html">← All Demos</a> · <a href="target-activities.html">Target Activities</a> ·
-    <a href="https://experienceleague.adobe.com/en/docs/target/using/recommendations/recommendations" target="_blank" rel="noopener">Official Docs ↗</a>
+    <a href="https://experienceleague.adobe.com/en/docs/target/using/recommendations/recommendations" target="_blank" rel="noopener">Official Docs ↗</a> ·
+    <a href="https://experienceleague.adobe.com/en/docs/target/using/experiences/vec/visual-experience-composer" target="_blank" rel="noopener">VEC Docs ↗</a> ·
+    <a href="https://experienceleague.adobe.com/en/docs/target/using/experiences/form-experience-composer" target="_blank" rel="noopener">Form-Based Docs ↗</a>
 </footer>
 
 <script src="scripts/log.js"></script>
@@ -307,6 +442,45 @@ function resetDemo() {
 
 // Initial render
 renderRecs();
+
+/* ── VEC: fire sendEvent with renderDecisions:true ── */
+window.addEventListener('load', function () {
+    logMsg('target', 'Sending VEC pageview event with renderDecisions:true …');
+    var dot = document.getElementById('vec-dot-rec');
+    var label = document.getElementById('vec-status-rec');
+
+    alloy("sendEvent", {
+        renderDecisions: true,
+        xdm: {
+            web: {
+                webPageDetails: {
+                    name: "Target Recommendations Demo",
+                    URL: window.location.href
+                }
+            }
+        }
+    }).then(function (result) {
+        var props = result.propositions || [];
+        var vecProps = props.filter(function (p) {
+            return p.renderAttempted === true || p.scope === '__view__';
+        });
+        if (vecProps.length) {
+            if (dot) { dot.className = 'vec-dot active'; }
+            if (label) { label.textContent = vecProps.length + ' VEC proposition(s) applied'; }
+            var hero = document.getElementById('vec-hero-rec');
+            if (hero) { hero.classList.add('vec-modified'); }
+            logMsg('target', 'VEC propositions applied: ' + vecProps.length);
+        } else {
+            if (dot) { dot.className = 'vec-dot'; }
+            if (label) { label.textContent = 'No VEC activity running — hero shows defaults'; }
+            logMsg('target', 'No VEC propositions (no active Recommendations VEC activity)');
+        }
+    }).catch(function (err) {
+        if (dot) { dot.className = 'vec-dot'; }
+        if (label) { label.textContent = 'Error: ' + err.message; }
+        logMsg('error', 'VEC sendEvent error: ' + err.message);
+    });
+});
 </script>
 </body>
 </html>
