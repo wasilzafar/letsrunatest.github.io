@@ -40,12 +40,80 @@
         .rule.active{background:rgba(236,72,153,0.08);border-radius:6px;padding:0.5rem 0.75rem;margin:0 -0.75rem}
 
         @media(max-width:768px){.preview-body{flex-direction:column}}
+
+        /* Experience Composers comparison */
+        .composer-compare{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:1rem}
+        .composer-card{background:rgba(255,255,255,0.03);border:2px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.5rem;transition:border-color 0.3s}
+        .composer-card.card-vec{border-color:rgba(236,72,153,0.3)}
+        .composer-card.card-form{border-color:rgba(251,191,36,0.3)}
+        .composer-card h4{font-size:0.95rem;color:#fff;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.5rem}
+        .composer-card ul{list-style:none;padding:0;margin:0}
+        .composer-card li{padding:0.3rem 0;font-size:0.85rem;color:#aaa;padding-left:1.2rem;position:relative}
+        .composer-card li::before{content:"→";position:absolute;left:0;color:var(--accent)}
+
+        /* VEC Hero */
+        .vec-hero{background:linear-gradient(135deg,#3d1f33 0%,#1a0d14 50%,#2d1625 100%);border-radius:16px;overflow:hidden;padding:3rem 2.5rem;text-align:center;position:relative;margin-bottom:1.5rem;border:2px solid rgba(236,72,153,0.15);transition:all 0.5s}
+        .vec-hero.vec-modified{border-color:#ec4899;box-shadow:0 0 30px rgba(236,72,153,0.15)}
+        .vec-hero-eyebrow{font-size:0.75rem;text-transform:uppercase;letter-spacing:0.15em;color:#f472b6;margin-bottom:0.75rem;font-weight:600}
+        .vec-hero h2{font-size:2rem;color:#fff;margin-bottom:0.75rem;line-height:1.3}
+        .vec-hero .vec-hero-sub{font-size:1.05rem;color:rgba(255,255,255,0.7);margin-bottom:1.5rem;max-width:500px;margin-left:auto;margin-right:auto}
+        .vec-cta{display:inline-block;padding:0.75rem 2rem;background:#ec4899;color:#fff;border-radius:8px;font-weight:700;font-size:1rem;text-decoration:none;transition:all 0.3s;cursor:pointer;border:none}
+        .vec-cta:hover{background:#be185d;transform:translateY(-2px);box-shadow:0 4px 15px rgba(236,72,153,0.4)}
+        .vec-selector-row{display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;margin-top:1.75rem;padding-top:1.25rem;border-top:1px solid rgba(255,255,255,0.06)}
+        .vec-selector-badge{font-size:0.68rem;background:rgba(236,72,153,0.12);border:1px solid rgba(236,72,153,0.25);color:#f9a8d4;padding:0.2rem 0.5rem;border-radius:4px;font-family:'SF Mono','Fira Code',monospace}
+        .vec-status{display:inline-flex;align-items:center;gap:0.5rem;font-size:0.82rem;color:#888;background:rgba(255,255,255,0.03);padding:0.4rem 0.8rem;border-radius:6px;margin-bottom:1rem}
+        .vec-dot{width:8px;height:8px;border-radius:50%;background:#555;transition:background 0.3s;flex-shrink:0}
+        .vec-dot.active{background:#4ade80}
+        .vec-dot.pending{background:#fbbf24;animation:vecPulse 1.5s ease-in-out infinite}
+        @keyframes vecPulse{0%,100%{opacity:1}50%{opacity:0.4}}
+        .config-block{background:rgba(0,0,0,0.3);border-radius:8px;padding:1rem;margin-top:1rem;font-family:'SF Mono','Fira Code',monospace;font-size:0.78rem;color:#aaa;overflow-x:auto}
+        .config-block .key{color:#fbbf24}
+        .config-block .val{color:#4ade80}
+        .config-block .comment{color:#555}
+
+        @media(max-width:768px){.composer-compare{grid-template-columns:1fr}.vec-hero{padding:2rem 1.5rem}.vec-hero h2{font-size:1.5rem}}
     </style>
+
+    <!-- Alloy Web SDK Inline Stub -->
+    <script>
+        !function (n, o) {
+            o.forEach(function (o) {
+                n[o] || ((n.__alloyNS = n.__alloyNS ||
+                    []).push(o), n[o] = function () {
+                        var u = arguments; return new Promise(
+                            function (i, l) { n.setTimeout(function () { n[o].q.push([i, l, u]) }) })
+                    }, n[o].q = [])
+            })
+        }
+            (window, ["alloy"]);
+    </script>
+    <script src="https://cdn1.adoberesources.net/alloy/2.24.0/alloy.min.js" async></script>
+    <script>
+        alloy("configure", {
+            datastreamId: "f50c86ad-a830-4068-a224-a7548d3c3f8d",
+            orgId: "B504732B5D3B2A790A495ECF@AdobeOrg",
+            debugEnabled: true,
+            autoCollectPropositionInteractions: {
+                "AJO": "always",
+                "TGT": "always"
+            }
+        });
+        alloy("setConsent", {
+            consent: [{
+                standard: "Adobe",
+                version: "2.0",
+                value: {
+                    collect: { val: "y" },
+                    metadata: { time: new Date().toISOString() }
+                }
+            }]
+        });
+    </script>
 </head>
 <body>
 
 <div class="page-header">
-    <h1>🎯 Experience Targeting <span class="badge">Rules-Based</span></h1>
+    <h1>🎯 Experience Targeting <span class="badge">VEC + Rules-Based</span></h1>
     <p>Deliver specific experiences to defined audience segments using marketer-defined rules. The right experience for the right audience — every time.</p>
     <div class="breadcrumb">
         <a href="index.html">Home</a><span>/</span>
@@ -91,9 +159,74 @@
         </div>
     </div>
 
+    <!-- Experience Composers -->
     <div class="section">
-        <h2>🧪 Live Demo — Audience-Based Experience Delivery</h2>
-        <p>Click an audience segment to simulate a visitor arriving from that segment. Watch the preview update to show the targeted experience and see which priority rule matched.</p>
+        <h2>📐 Experience Composers</h2>
+        <p>Adobe Target offers two ways to create XT experiences. Use the VEC for visual page modifications, or the Form-Based composer for named-location content delivery.</p>
+        <div class="composer-compare">
+            <div class="composer-card card-vec">
+                <h4>🎨 Visual Experience Composer (VEC)</h4>
+                <ul>
+                    <li>WYSIWYG editor — visually modify page elements per audience</li>
+                    <li>Target identifies elements via CSS selectors</li>
+                    <li>Uses <code style="font-size:0.8rem;background:rgba(0,0,0,0.3);padding:0.1rem 0.3rem;border-radius:3px">renderDecisions: true</code></li>
+                    <li>SDK auto-applies DOM modifications</li>
+                    <li>Each audience gets different visual changes</li>
+                    <li>Best for: visual layout/copy changes per segment</li>
+                </ul>
+            </div>
+            <div class="composer-card card-form">
+                <h4>📝 Form-Based Experience Composer</h4>
+                <ul>
+                    <li>Non-visual — deliver content to named locations</li>
+                    <li>Uses custom <code style="font-size:0.8rem;background:rgba(0,0,0,0.3);padding:0.1rem 0.3rem;border-radius:3px">decisionScopes</code></li>
+                    <li>Propositions fetched & manually rendered</li>
+                    <li>Full control over rendering logic</li>
+                    <li>Supports HTML, JSON, redirect offers</li>
+                    <li>Best for: headless, email, kiosks, SPAs</li>
+                </ul>
+            </div>
+        </div>
+        <div class="config-block">
+            <span class="comment">// VEC: auto-apply modifications per audience</span><br>
+            alloy("<span class="key">sendEvent</span>", {<br>
+            &nbsp;&nbsp;<span class="key">renderDecisions</span>: <span class="val">true</span> <span class="comment">// SDK applies VEC changes automatically</span><br>
+            });
+        </div>
+    </div>
+
+    <!-- VEC Demo -->
+    <div class="section">
+        <h2>🎨 VEC Demo — Targeted Hero</h2>
+        <p>The hero section below contains elements targetable via the <strong>Visual Experience Composer</strong>. In an XT activity, each audience segment gets different VEC modifications — e.g. VIPs see "Welcome Back, VIP!" while new visitors see "Welcome to Our Store!"</p>
+
+        <div class="demo-area">
+            <div class="vec-status">
+                <span class="vec-dot pending" id="vec-dot-xt"></span>
+                <span id="vec-status-xt">Waiting for VEC propositions…</span>
+            </div>
+
+            <div class="vec-hero" id="vec-hero-xt">
+                <div class="vec-hero-eyebrow">Personalized for You</div>
+                <h2 id="vec-headline-xt">Welcome to Our Store</h2>
+                <p class="vec-hero-sub" id="vec-subtitle-xt">Discover products tailored to your preferences. Your personalized shopping experience starts here.</p>
+                <a class="vec-cta" id="vec-cta-xt" href="#" onclick="event.preventDefault(); logMsg('target','User clicked VEC hero CTA')">Explore Now →</a>
+                <div class="vec-selector-row">
+                    <span class="vec-selector-badge">#vec-hero-xt</span>
+                    <span class="vec-selector-badge">#vec-headline-xt</span>
+                    <span class="vec-selector-badge">#vec-subtitle-xt</span>
+                    <span class="vec-selector-badge">#vec-cta-xt</span>
+                </div>
+            </div>
+
+            <p style="font-size:0.82rem;color:#888;margin-top:0.5rem">💡 Create an XT activity in Adobe Target using the VEC. For each audience (VIP, Returning, New), visually modify the hero headline, subtitle, and CTA. Target auto-delivers the right version per visitor via <code style="font-size:0.78rem;background:rgba(0,0,0,0.3);padding:0.1rem 0.3rem;border-radius:3px">renderDecisions: true</code>.</p>
+        </div>
+    </div>
+
+    <!-- Form-Based Simulation -->
+    <div class="section">
+        <h2>📝 Form-Based Simulation — Audience-Based Delivery</h2>
+        <p>Click an audience segment to simulate a visitor arriving from that segment. This demonstrates how the <strong>Form-Based Experience Composer</strong> delivers different content to named locations based on audience rules.</p>
 
         <div class="demo-area">
             <h3>▶ Select Audience Segment</h3>
@@ -146,7 +279,9 @@
 
 <footer>
     <a href="index.html">← All Demos</a> · <a href="target-activities.html">Target Activities</a> ·
-    <a href="https://experienceleague.adobe.com/en/docs/target/using/activities/experience-targeting/experience-target" target="_blank" rel="noopener">Official Docs ↗</a>
+    <a href="https://experienceleague.adobe.com/en/docs/target/using/activities/experience-targeting/experience-target" target="_blank" rel="noopener">Official Docs ↗</a> ·
+    <a href="https://experienceleague.adobe.com/en/docs/target/using/experiences/vec/visual-experience-composer" target="_blank" rel="noopener">VEC Docs ↗</a> ·
+    <a href="https://experienceleague.adobe.com/en/docs/target/using/experiences/form-experience-composer" target="_blank" rel="noopener">Form-Based Docs ↗</a>
 </footer>
 
 <script src="scripts/log.js"></script>
@@ -272,6 +407,46 @@ function resetDemo() {
     document.getElementById('pvBody').innerHTML = '<div class="promo-card"><div class="promo-icon">❓</div><div class="promo-title">Offer A</div><div class="promo-text">Pending</div></div><div class="promo-card"><div class="promo-icon">❓</div><div class="promo-title">Offer B</div><div class="promo-text">Pending</div></div><div class="promo-card"><div class="promo-icon">❓</div><div class="promo-title">Offer C</div><div class="promo-text">Pending</div></div>';
     document.getElementById('log').innerHTML = '<div class="log-entry"><em>Reset. Select an audience to begin…</em></div>';
 }
+
+// ── VEC: Request & auto-apply VEC modifications on page load ──
+window.addEventListener('load', function() {
+    logMsg('target', 'Web SDK v2.24.0 — requesting VEC propositions (renderDecisions: true)');
+    alloy("sendEvent", {
+        renderDecisions: true,
+        xdm: {
+            eventType: "web.webpagedetails.pageViews",
+            web: {
+                webPageDetails: {
+                    URL: window.location.href,
+                    name: document.title,
+                    pageViews: { value: 1 }
+                }
+            }
+        }
+    }).then(function(result) {
+        var propositions = result.propositions || [];
+        var vecProps = propositions.filter(function(p) {
+            return p.renderAttempted === true || p.scope === '__view__';
+        });
+        if (vecProps.length > 0) {
+            logMsg('target', vecProps.length + ' VEC proposition(s) auto-applied to page');
+            var heroEl = document.getElementById('vec-hero-xt');
+            if (heroEl) heroEl.classList.add('vec-modified');
+            var dot = document.getElementById('vec-dot-xt');
+            if (dot) dot.className = 'vec-dot active';
+            var st = document.getElementById('vec-status-xt');
+            if (st) st.textContent = vecProps.length + ' VEC modification(s) applied';
+        } else {
+            logMsg('target', 'No VEC propositions returned (no active VEC activity)');
+            var dot = document.getElementById('vec-dot-xt');
+            if (dot) dot.className = 'vec-dot';
+            var st = document.getElementById('vec-status-xt');
+            if (st) st.textContent = 'No VEC activity active for this page';
+        }
+    }).catch(function(error) {
+        logMsg('target', 'VEC request error: ' + error.message);
+    });
+});
 </script>
 </body>
 </html>
