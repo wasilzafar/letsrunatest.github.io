@@ -68,6 +68,18 @@
         @media(max-width:768px){.composer-compare{grid-template-columns:1fr}.vec-hero{padding:2rem 1.5rem}.vec-hero h2{font-size:1.5rem}}
     </style>
 
+    <!-- Prehiding snippet — prevents VEC flicker (async Web SDK) -->
+    <!-- https://experienceleague.adobe.com/en/docs/experience-platform/collection/use-cases/personalization/manage-flicker -->
+    <script>
+        !function(e,a,n,t){
+            if(a)return;
+            var i=e.head;if(i){
+            var o=e.createElement("style");
+            o.id="alloy-prehiding",o.innerText=n,i.appendChild(o),
+            setTimeout(function(){o.parentNode&&o.parentNode.removeChild(o)},t)}}
+            (document, document.location.href.indexOf("adobe_authoring_enabled") !== -1, ".vec-hero { opacity: 0 !important }", 3000);
+    </script>
+
     <!-- Alloy Web SDK Inline Stub -->
     <script>
         !function (n, o) {
@@ -84,6 +96,7 @@
     <script src="https://cdn1.adoberesources.net/alloy/2.24.0/alloy.min.js" async></script>
     <script>
         alloy("configure", {
+            prehidingStyle: ".vec-hero { opacity: 0 !important }",
             datastreamId: "f50c86ad-a830-4068-a224-a7548d3c3f8d",
             orgId: "B504732B5D3B2A790A495ECF@AdobeOrg",
             debugEnabled: true,
