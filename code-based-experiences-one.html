@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Let's Run a Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+
+        .container {
+            text-align: center;
+            padding: 2rem;
+            max-width: 600px;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .status {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            display: inline-block;
+            backdrop-filter: blur(10px);
+        }
+
+        .status::before {
+            content: "●";
+            color: #4ade80;
+            margin-right: 0.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .event-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .event-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .event-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .event-btn:active {
+            transform: translateY(0);
+        }
+
+        .event-log {
+            margin-top: 2rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: left;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
+        .event-log-item {
+            padding: 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .event-log-item:last-child {
+            border-bottom: none;
+        }
+
+        .event-log-item .time {
+            color: #4ade80;
+        }
+
+        .event-log-item .type {
+            color: #fbbf24;
+        }
+
+        .hero-section {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            min-height: 80px;
+        }
+
+        .hero-section.campaign {
+            border-color: #f59e0b;
+        }
+
+        .hero-section.journey {
+            border-color: #8b5cf6;
+        }
+
+        .hero-section.image {
+            border-color: #10b981;
+        }
+
+        .hero-section h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: #fbbf24;
+        }
+
+        .hero-section.journey h3 {
+            color: #a78bfa;
+        }
+
+        .hero-section.image h3 {
+            color: #34d399;
+        }
+
+        .hero-section .personalized-content {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: monospace;
+            text-align: left;
+            word-break: break-all;
+        }
+
+        .hero-section .personalized-content .msg {
+            font-size: 1.1rem;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin-top: 0.5rem;
+        }
+
+        .hero-section .banner-image {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 0 auto;
+        }
+
+        .hero-section .banner-image-caption {
+            margin-top: 0.75rem;
+            font-size: 1.05rem;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .hero-section .placeholder {
+            opacity: 0.6;
+            font-style: italic;
+        }
+
+        .surfaces-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        footer {
+            position: fixed;
+            bottom: 1rem;
+            opacity: 0.7;
+            font-size: 0.875rem;
+        }
+    </style>
+    <script>
+        !function (n, o) {
+            o.forEach(function (o) {
+                n[o] || ((n.__alloyNS = n.__alloyNS ||
+                    []).push(o), n[o] = function () {
+                        var u = arguments; return new Promise(
+                            function (i, l) { n.setTimeout(function () { n[o].q.push([i, l, u]) }) })
+                    }, n[o].q = [])
+            })
+        }
+            (window, ["alloy"]);
+    </script>
+    <script src="https://cdn1.adoberesources.net/alloy/2.24.0/alloy.min.js" async></script>
+    <script>
+        alloy("configure", {
+            datastreamId: "f50c86ad-a830-4068-a224-a7548d3c3f8d",
+            orgId: "B504732B5D3B2A790A495ECF@AdobeOrg",
+            debugEnabled: true
+        });
+        // Set consent using the Adobe 2.0 standard
+        alloy("setConsent", {
+        "consent": [{
+            "standard": "Adobe",
+            "version": "2.0",
+            "value": {
+            "collect": {
+                "val": "y"
+            },
+            "metadata": {
+                "time": new Date().toISOString()
+            }
+            }
+        }]
+        });
+
+        // ---------------------------------------------------------------
+        // Child surface configuration (4 code-based experience surfaces)
+        // ---------------------------------------------------------------
+        // Each surface renders into its matching content element. Surfaces
+        // whose name ends with "-image" render an <img> banner from the
+        // proposition JSON (imageUrl field); the others render JSON.
+        const SURFACES = [
+            { name: 'hero-section-campaign',        elementId: 'hero-section-campaign-content',        isImage: false },
+            { name: 'hero-section-campaign-image',  elementId: 'hero-section-campaign-image-content',  isImage: true  },
+            { name: 'hero-section-journey',         elementId: 'hero-section-journey-content',         isImage: false },
+            { name: 'hero-section-journey-image',   elementId: 'hero-section-journey-image-content',   isImage: true  }
+        ];
+
+        // Stores the latest proposition per surface (keyed by surface name)
+        // so interact events can be sent after the user clicks a section.
+        const propositionStore = {};
+
+        // Helper function to log events to the UI
+        function logEvent(eventType, details) {
+            const log = document.getElementById('eventLog');
+            const time = new Date().toLocaleTimeString();
+            const item = document.createElement('div');
+            item.className = 'event-log-item';
+            item.innerHTML = `<span class="time">[${time}]</span> <span class="type">${eventType}</span> - ${details}`;
+            log.insertBefore(item, log.firstChild);
+        }
+
+        // Function to send display event for code-based experience
+        function sendCodeBasedDisplayEvent(proposition) {
+            const { id, scope, scopeDetails = {} } = proposition;
+
+            alloy("sendEvent", {
+                xdm: {
+                    eventType: "decisioning.propositionDisplay",
+                    _experience: {
+                        decisioning: {
+                            propositions: [{
+                                id: id,
+                                scope: scope,
+                                scopeDetails: scopeDetails
+                            }],
+                            propositionEventType: {
+                                display: 1
+                            }
+                        }
+                    }
+                }
+            }).then(function(result) {
+                console.log("Code-based display event sent:", result);
+                logEvent("decisioning.propositionDisplay", "Display event sent for: " + scope);
+            });
+        }
+
+        // Function to send interact event for code-based experience
+        function sendCodeBasedInteractEvent(label, proposition) {
+            const { id, scope, scopeDetails = {} } = proposition;
+
+            alloy("sendEvent", {
+                xdm: {
+                    eventType: "decisioning.propositionInteract",
+                    _experience: {
+                        decisioning: {
+                            propositions: [{
+                                id: id,
+                                scope: scope,
+                                scopeDetails: scopeDetails
+                            }],
+                            propositionEventType: {
+                                interact: 1
+                            },
+                            propositionAction: {
+                                label: label
+                            }
+                        }
+                    }
+                }
+            }).then(function(result) {
+                console.log("Code-based interact event sent:", result);
+                logEvent("decisioning.propositionInteract", "Interact event: " + label);
+            });
+        }
+
+        // Render an image banner from personalized JSON content.
+        // Supports several common field names for the image URL and caption.
+        function renderImageBanner(section, jsonContent) {
+            const imageUrl = jsonContent.imageUrl || jsonContent.image || jsonContent.src || jsonContent.url;
+            const caption = jsonContent.msg || jsonContent.caption || jsonContent.alt || jsonContent.title || "";
+
+            if (imageUrl) {
+                section.innerHTML = `
+                    <div class="personalized-content">
+                        <strong>🎉 Personalized Image:</strong>
+                        <img class="banner-image" src="${imageUrl}" alt="${caption || 'Personalized banner image'}" />
+                        ${caption ? `<div class="banner-image-caption">💬 ${caption}</div>` : ''}
+                    </div>
+                `;
+                return true;
+            }
+            return false;
+        }
+
+        // Function to apply personalization to a specific surface/section
+        function applyPersonalizationToSection(propositions, surface) {
+            const section = document.getElementById(surface.elementId);
+            const fullSurface = "web://letsrunatest.com/#" + surface.name;
+
+            // Find the proposition for this surface. To avoid a shorter
+            // surface name (e.g. "hero-section-campaign") matching a longer
+            // one ("hero-section-campaign-image"), match on the full scope
+            // or the exact hash fragment.
+            const proposition = propositions.find(function(prop) {
+                const scope = prop.scope || "";
+                return scope === fullSurface ||
+                       scope === surface.name ||
+                       scope.endsWith("#" + surface.name) ||
+                       scope.endsWith("/" + surface.name);
+            });
+
+            if (proposition && proposition.items && proposition.items.length > 0) {
+                // Store the proposition for later interact events
+                propositionStore[surface.name] = proposition;
+
+                // Get the JSON content from the proposition
+                const item = proposition.items[0];
+                let content = null;
+
+                if (item.data && item.data.content) {
+                    content = item.data.content;
+                } else if (item.content) {
+                    content = item.content;
+                }
+
+                if (content) {
+                    // Parse JSON if it's a string
+                    let jsonContent = typeof content === 'string' ? JSON.parse(content) : content;
+
+                    // Image surfaces render an <img>; fall back to JSON if no image URL is present
+                    if (surface.isImage && renderImageBanner(section, jsonContent)) {
+                        logEvent("code-based.applied", surface.name + " personalized with image");
+                        sendCodeBasedDisplayEvent(proposition);
+                        return true;
+                    }
+
+                    // Render the personalized JSON content
+                    section.innerHTML = `
+                        <div class="personalized-content">
+                            <strong>🎉 Personalized Content:</strong>
+                            <pre>${JSON.stringify(jsonContent, null, 2)}</pre>
+                            ${jsonContent.msg ? `<div class="msg">💬 Message: <strong>${jsonContent.msg}</strong></div>` : ''}
+                        </div>
+                    `;
+
+                    logEvent("code-based.applied", surface.name + " personalized with JSON");
+
+                    // Send display event after rendering
+                    sendCodeBasedDisplayEvent(proposition);
+
+                    return true;
+                }
+            }
+
+            // No personalization found
+            section.innerHTML = `<span class="placeholder">No personalization returned. Configure in AJO with surface: ${fullSurface}</span>`;
+            logEvent("code-based.none", "No personalization for " + surface.name);
+            return false;
+        }
+
+        // Apply personalization to all surfaces
+        function applyAllPersonalization(propositions) {
+            SURFACES.forEach(function(surface) {
+                applyPersonalizationToSection(propositions, surface);
+            });
+        }
+
+        // Set the same placeholder/message for every surface's content element
+        function setAllSurfaces(htmlFor) {
+            SURFACES.forEach(function(surface) {
+                const el = document.getElementById(surface.elementId);
+                if (el) {
+                    el.innerHTML = htmlFor(surface);
+                }
+            });
+        }
+
+        // Send Page View event on load and request code-based experience
+        window.addEventListener('load', function() {
+            // Request personalization with code-based experience surface
+            alloy("sendEvent", {
+                renderDecisions: false, // We'll manually render code-based experiences
+                personalization: {
+                    surfaces: ["web://letsrunatest.com/#hero-section"]
+                },
+                xdm: {
+                    eventType: "web.webpagedetails.pageViews",
+                    web: {
+                        webPageDetails: {
+                            URL: window.location.href,
+                            name: document.title,
+                            pageViews: {
+                                value: 1
+                            }
+                        },
+                        webReferrer: {
+                            URL: document.referrer || ""
+                        }
+                    },
+                    device: {
+                        screenWidth: window.screen.width,
+                        screenHeight: window.screen.height
+                    },
+                    environment: {
+                        browserDetails: {
+                            viewportWidth: window.innerWidth,
+                            viewportHeight: window.innerHeight
+                        }
+                    }
+                }
+            }).then(function(result) {
+                console.log("Page View event sent with code-based experience request:", result);
+                logEvent("web.webpagedetails.pageViews", "Page loaded, requesting personalization for 4 surfaces");
+
+                // Log propositions if any were returned
+                if (result.propositions && result.propositions.length > 0) {
+                    console.log("Propositions received:", result.propositions);
+                    logEvent("decisioning.propositions", result.propositions.length + " proposition(s) received");
+
+                    // Apply personalization to all sections
+                    applyAllPersonalization(result.propositions);
+                } else {
+                    // No propositions - show placeholder for all sections
+                    setAllSurfaces(function(surface) {
+                        return `<span class="placeholder">No personalization. Configure in AJO: web://letsrunatest.com/#${surface.name}</span>`;
+                    });
+                    logEvent("code-based.none", "No propositions returned from Edge");
+                }
+            }).catch(function(error) {
+                console.error("Error sending Page View event:", error);
+                logEvent("error", "Failed to fetch personalization: " + error.message);
+            });
+        });
+
+        // Product View Event
+        function sendProductViewEvent() {
+            alloy("sendEvent", {
+                xdm: {
+                    eventType: "commerce.productViews",
+                    commerce: {
+                        productViews: {
+                            value: 1
+                        }
+                    },
+                    productListItems: [{
+                        SKU: "TEST-SKU-001",
+                        name: "Test Product",
+                        currencyCode: "USD",
+                        priceTotal: 99.99,
+                        quantity: 1,
+                        productCategories: [{
+                            categoryID: "cat-001",
+                            categoryName: "Test Category",
+                            categoryPath: "Home > Test Category"
+                        }]
+                    }],
+                    web: {
+                        webPageDetails: {
+                            URL: window.location.href,
+                            name: "Product Detail Page"
+                        }
+                    }
+                }
+            }).then(function(result) {
+                console.log("Product View event sent:", result);
+                logEvent("commerce.productViews", "SKU: TEST-SKU-001, Price: $99.99");
+            });
+        }
+
+        // Add to Cart Event
+        function sendAddToCartEvent() {
+            alloy("sendEvent", {
+                xdm: {
+                    eventType: "commerce.productListAdds",
+                    commerce: {
+                        productListAdds: {
+                            value: 1
+                        },
+                        cart: {
+                            cartID: "cart-" + Date.now(),
+                            cartSource: "web"
+                        }
+                    },
+                    productListItems: [{
+                        SKU: "TEST-SKU-001",
+                        name: "Test Product",
+                        currencyCode: "USD",
+                        priceTotal: 99.99,
+                        quantity: 1,
+                        productAddMethod: "button click"
+                    }],
+                    web: {
+                        webInteraction: {
+                            name: "Add to Cart",
+                            type: "other",
+                            linkClicks: {
+                                value: 1
+                            }
+                        }
+                    }
+                }
+            }).then(function(result) {
+                console.log("Add to Cart event sent:", result);
+                logEvent("commerce.productListAdds", "Added TEST-SKU-001 to cart");
+            });
+        }
+
+        // Purchase Event
+        function sendPurchaseEvent() {
+            const orderId = "ORD-" + Date.now();
+            alloy("sendEvent", {
+                xdm: {
+                    eventType: "commerce.purchases",
+                    commerce: {
+                        purchases: {
+                            value: 1
+                        },
+                        order: {
+                            purchaseID: orderId,
+                            currencyCode: "USD",
+                            priceTotal: 109.98,
+                            taxAmount: 9.99,
+                            orderType: "checkout",
+                            payments: [{
+                                currencyCode: "USD",
+                                paymentAmount: 109.98,
+                                paymentType: "credit_card",
+                                transactionID: "TXN-" + Date.now()
+                            }]
+                        },
+                        shipping: {
+                            shippingMethod: "Standard",
+                            shippingAmount: 0,
+                            currencyCode: "USD"
+                        }
+                    },
+                    productListItems: [{
+                        SKU: "TEST-SKU-001",
+                        name: "Test Product",
+                        currencyCode: "USD",
+                        priceTotal: 99.99,
+                        quantity: 1
+                    }],
+                    web: {
+                        webPageDetails: {
+                            URL: window.location.href,
+                            name: "Order Confirmation"
+                        }
+                    }
+                }
+            }).then(function(result) {
+                console.log("Purchase event sent:", result);
+                logEvent("commerce.purchases", "Order: " + orderId + ", Total: $109.98");
+            });
+        }
+
+        // Custom Link Click Event
+        function sendLinkClickEvent(linkName) {
+            alloy("sendEvent", {
+                xdm: {
+                    eventType: "web.webinteraction.linkClicks",
+                    web: {
+                        webInteraction: {
+                            name: linkName,
+                            type: "other",
+                            URL: window.location.href,
+                            linkClicks: {
+                                value: 1
+                            }
+                        },
+                        webPageDetails: {
+                            URL: window.location.href,
+                            name: document.title
+                        }
+                    }
+                }
+            }).then(function(result) {
+                console.log("Link Click event sent:", result);
+                logEvent("web.webinteraction.linkClicks", "Link: " + linkName);
+            });
+        }
+
+        // Search Event
+        function sendSearchEvent() {
+            const searchTerm = prompt("Enter search term:", "test product");
+            if (searchTerm) {
+                alloy("sendEvent", {
+                    xdm: {
+                        eventType: "search.productSearch",
+                        search: {
+                            keywords: searchTerm,
+                            isPaid: false,
+                            searchEngine: "internal"
+                        },
+                        web: {
+                            webPageDetails: {
+                                URL: window.location.href,
+                                name: "Search Results"
+                            }
+                        }
+                    }
+                }).then(function(result) {
+                    console.log("Search event sent:", result);
+                    logEvent("search.productSearch", "Keywords: " + searchTerm);
+                });
+            }
+        }
+
+        // Request Personalization with automatic display events
+        function requestPersonalization() {
+            alloy("sendEvent", {
+                renderDecisions: true,
+                personalization: {
+                    sendDisplayEvent: true,
+                    decisionScopes: ["hero-banner", "homepage-offer", "__view__"]
+                },
+                xdm: {
+                    eventType: "decisioning.propositionFetch",
+                    web: {
+                        webPageDetails: {
+                            URL: window.location.href,
+                            name: document.title
+                        }
+                    }
+                }
+            }).then(function(result) {
+                console.log("Personalization request sent:", result);
+                logEvent("decisioning.propositionFetch", "Requested personalization");
+
+                if (result.propositions && result.propositions.length > 0) {
+                    logEvent("decisioning.propositions", result.propositions.length + " proposition(s) received");
+
+                    // Display events sent automatically
+                    result.propositions.forEach(function(prop) {
+                        console.log("Proposition:", prop);
+                        logEvent("decisioning.display", "Auto display for: " + (prop.scope || "default"));
+                    });
+                } else {
+                    logEvent("decisioning.propositions", "No propositions returned (check Target/Offer Decisioning config)");
+                }
+            }).catch(function(error) {
+                console.error("Personalization error:", error);
+                logEvent("error", "Personalization request failed");
+            });
+        }
+
+        // Manual display event for custom rendered content
+        function sendManualDisplayEvent() {
+            alloy("sendEvent", {
+                xdm: {
+                    eventType: "decisioning.propositionDisplay",
+                    _experience: {
+                        decisioning: {
+                            propositions: [{
+                                id: "manual-proposition-" + Date.now(),
+                                scope: "custom-banner",
+                                scopeDetails: {
+                                    decisionProvider: "TGT",
+                                    activity: {
+                                        id: "manual-activity-001"
+                                    }
+                                }
+                            }],
+                            propositionEventType: {
+                                display: 1
+                            }
+                        }
+                    },
+                    web: {
+                        webPageDetails: {
+                            URL: window.location.href,
+                            name: document.title
+                        }
+                    }
+                }
+            }).then(function(result) {
+                console.log("Manual display event sent:", result);
+                logEvent("decisioning.propositionDisplay", "Manual display event sent for custom-banner");
+            });
+        }
+
+        // Refresh all sections - fetch personalization again for all 4 surfaces
+        function refreshSections() {
+            setAllSurfaces(function() {
+                return `<span class="placeholder">Refreshing...</span>`;
+            });
+
+            alloy("sendEvent", {
+                renderDecisions: false,
+                personalization: {
+                    surfaces: SURFACES.map(function(surface) {
+                        return "web://letsrunatest.com/#" + surface.name;
+                    })
+                },
+                xdm: {
+                    eventType: "decisioning.propositionFetch",
+                    web: {
+                        webPageDetails: {
+                            URL: window.location.href,
+                            name: document.title
+                        }
+                    }
+                }
+            }).then(function(result) {
+                console.log("Sections refresh result:", result);
+                logEvent("code-based.refresh", "Refreshing personalization for 4 surfaces");
+
+                if (result.propositions && result.propositions.length > 0) {
+                    applyAllPersonalization(result.propositions);
+                } else {
+                    setAllSurfaces(function(surface) {
+                        return `<span class="placeholder">No personalization. Configure: web://letsrunatest.com/#${surface.name}</span>`;
+                    });
+                    logEvent("code-based.none", "No propositions on refresh");
+                }
+            }).catch(function(error) {
+                console.error("Error refreshing sections:", error);
+                setAllSurfaces(function() {
+                    return `<span class="placeholder">Error: ${error.message}</span>`;
+                });
+            });
+        }
+
+        // Generic interact handler for a given surface name
+        function sendSurfaceInteractEvent(surfaceName, label) {
+            const proposition = propositionStore[surfaceName];
+            if (proposition) {
+                sendCodeBasedInteractEvent(label, proposition);
+            } else {
+                logEvent("code-based.error", "No proposition to interact with for " + surfaceName);
+                alert("No personalization applied for " + surfaceName + ". Wait for it to load or click 'Refresh Sections'.");
+            }
+        }
+
+        function sendCampaignInteractEvent() {
+            sendSurfaceInteractEvent('hero-section-campaign', 'campaign-section-click');
+        }
+
+        function sendCampaignImageInteractEvent() {
+            sendSurfaceInteractEvent('hero-section-campaign-image', 'campaign-image-section-click');
+        }
+
+        function sendJourneyInteractEvent() {
+            sendSurfaceInteractEvent('hero-section-journey', 'journey-section-click');
+        }
+
+        function sendJourneyImageInteractEvent() {
+            sendSurfaceInteractEvent('hero-section-journey-image', 'journey-image-section-click');
+        }
+
+    </script>
+
+</head>
+
+<body>
+    <div class="container">
+        <h1>🧪 Let's Run a Test</h1>
+        <p>A sandbox for experimenting with code, configurations, and workflows.</p>
+        <div class="status">Site is live and running!</div>
+
+        <!-- Code-Based Experience Surfaces Container (4 child surfaces) -->
+        <div class="surfaces-container">
+            <!-- Campaign Surface -->
+            <div class="hero-section campaign" id="hero-section-campaign">
+                <h3>📢 Campaign Surface (hero-section-campaign)</h3>
+                <div id="hero-section-campaign-content"><span class="placeholder">No personalization. Configure in AJO: web://letsrunatest.com/#hero-section-campaign</span></div>
+            </div>
+
+            <!-- Campaign Banner Surface -->
+            <div class="hero-section image" id="hero-section-campaign-image">
+                <h3>🖼️ Campaign Banner Surface (hero-section-campaign-image)</h3>
+                <div id="hero-section-campaign-image-content"><span class="placeholder">No personalization. Configure in AJO: web://letsrunatest.com/#hero-section-campaign-image (JSON offer with an "imageUrl" field)</span></div>
+            </div>
+
+            <!-- Journey Surface -->
+            <div class="hero-section journey" id="hero-section-journey">
+                <h3>🚀 Journey Surface (hero-section-journey)</h3>
+                <div id="hero-section-journey-content"><span class="placeholder">No personalization. Configure in AJO: web://letsrunatest.com/#hero-section-journey</span></div>
+            </div>
+
+            <!-- Journey Banner Surface -->
+            <div class="hero-section image" id="hero-section-journey-image">
+                <h3>🖼️ Journey Banner Surface (hero-section-journey-image)</h3>
+                <div id="hero-section-journey-image-content"><span class="placeholder">No personalization. Configure in AJO: web://letsrunatest.com/#hero-section-journey-image (JSON offer with an "imageUrl" field)</span></div>
+            </div>
+        </div>
+
+        <div class="event-buttons">
+            <button class="event-btn" onclick="sendProductViewEvent()">📦 Product View</button>
+            <button class="event-btn" onclick="sendAddToCartEvent()">🛒 Add to Cart</button>
+            <button class="event-btn" onclick="sendPurchaseEvent()">💳 Purchase</button>
+            <button class="event-btn" onclick="sendSearchEvent()">🔍 Search</button>
+            <button class="event-btn" onclick="sendLinkClickEvent('Test Link')">🔗 Link Click</button>
+            <button class="event-btn" onclick="requestPersonalization()">🎯 Request Personalization</button>
+            <button class="event-btn" onclick="sendManualDisplayEvent()">👁️ Manual Display Event</button>
+            <button class="event-btn" onclick="refreshSections()">🔄 Refresh Sections</button>
+            <button class="event-btn" onclick="sendCampaignInteractEvent()">👆 Campaign Interact</button>
+            <button class="event-btn" onclick="sendCampaignImageInteractEvent()">👆 Campaign Image Interact</button>
+            <button class="event-btn" onclick="sendJourneyInteractEvent()">👆 Journey Interact</button>
+            <button class="event-btn" onclick="sendJourneyImageInteractEvent()">👆 Journey Image Interact</button>
+        </div>
+
+        <div class="event-log" id="eventLog">
+            <div class="event-log-item"><em>Events will appear here...</em></div>
+        </div>
+    </div>
+    <footer>
+        <a href="index.html" style="color: #fff; margin-right: 1rem;">← All Demos</a>
+        <a href="target-activities.html" style="color: #fff; margin-right: 1rem;">🎯 Target Activity Types</a>
+        <a href="#" style="color: #fff;">Copyright @Lets Run A Test</a>
+    </footer>
+
+</body>
+
+</html>
