@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Adobe Web SDK (Alloy) sandbox for testing code-based experiences and commerce events.">
     <title>Let's Run a Test</title>
     <style>
         * {
@@ -49,7 +50,7 @@
         }
 
         .status::before {
-            content: "●";
+            content: "\25CF";
             color: #4ade80;
             margin-right: 0.5rem;
             animation: pulse 2s infinite;
@@ -142,10 +143,6 @@
             border-color: #8b5cf6;
         }
 
-        .hero-section.image {
-            border-color: #10b981;
-        }
-
         .hero-section h3 {
             font-size: 1.2rem;
             margin-bottom: 0.5rem;
@@ -156,8 +153,9 @@
             color: #a78bfa;
         }
 
-        .hero-section.image h3 {
-            color: #34d399;
+        /* Image renders on top, message below (image followed by message) */
+        .surface-block {
+            margin-top: 0.75rem;
         }
 
         .hero-section .personalized-content {
@@ -226,38 +224,83 @@
             orgId: "B504732B5D3B2A790A495ECF@AdobeOrg",
             debugEnabled: true
         });
+
         // Set consent using the Adobe 2.0 standard
         alloy("setConsent", {
-        "consent": [{
-            "standard": "Adobe",
-            "version": "2.0",
-            "value": {
-            "collect": {
-                "val": "y"
-            },
-            "metadata": {
-                "time": new Date().toISOString()
-            }
-            }
-        }]
+            "consent": [{
+                "standard": "Adobe",
+                "version": "2.0",
+                "value": {
+                    "collect": {
+                        "val": "y"
+                    },
+                    "metadata": {
+                        "time": new Date().toISOString()
+                    }
+                }
+            }]
         });
 
         // ---------------------------------------------------------------
-        // Child surface configuration (4 code-based experience surfaces)
+        // Surface + group configuration
         // ---------------------------------------------------------------
-        // Each surface renders into its matching content element. Surfaces
-        // whose name ends with "-image" render an <img> banner from the
-        // proposition JSON (imageUrl field); the others render JSON.
-        const SURFACES = [
-            { name: 'hero-section-campaign',        elementId: 'hero-section-campaign-content',        isImage: false },
-            { name: 'hero-section-campaign-image',  elementId: 'hero-section-campaign-image-content',  isImage: true  },
-            { name: 'hero-section-journey',         elementId: 'hero-section-journey-content',         isImage: false },
-            { name: 'hero-section-journey-image',   elementId: 'hero-section-journey-image-content',   isImage: true  }
+        // There are still FOUR code-based surfaces in AJO. On the page we
+        // now COMBINE them into TWO display sections:
+        //   - Campaign  = image surface (banner) followed by message surface
+        //   - Journey   = image surface (banner) followed by message surface
+        // Each group shows its image on top and its message below.
+        const SITE_BASE = "web://letsrunatest.com/#";
+
+        const GROUPS = [
+            {
+                id: 'campaign',
+                imageSurface: 'hero-section-campaign-image',
+                messageSurface: 'hero-section-campaign',
+                imageElementId: 'campaign-image',
+                messageElementId: 'campaign-message'
+            },
+            {
+                id: 'journey',
+                imageSurface: 'hero-section-journey-image',
+                messageSurface: 'hero-section-journey',
+                imageElementId: 'journey-image',
+                messageElementId: 'journey-message'
+            }
         ];
 
-        // Stores the latest proposition per surface (keyed by surface name)
-        // so interact events can be sent after the user clicks a section.
+        // Flat list of every surface name we request from the Edge, derived
+        // from the groups (image + message surface for each group).
+        const SURFACE_NAMES = GROUPS.reduce(function (acc, g) {
+            acc.push(g.imageSurface, g.messageSurface);
+            return acc;
+        }, []);
+
+        // Full surface URIs for every child surface. We request the exact
+        // child surfaces (not the parent), so propositions actually return.
+        const SURFACE_URIS = SURFACE_NAMES.map(function (name) { return SITE_BASE + name; });
+
+        // Stores the latest proposition per surface name so interact events
+        // can be sent after the user clicks a section.
         const propositionStore = {};
+
+        // ---------------------------------------------------------------
+        // Security helpers
+        // ---------------------------------------------------------------
+        function escapeHtml(value) {
+            return String(value == null ? "" : value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+
+        // Only allow http(s) and data:image URLs for banner images.
+        function isSafeImageUrl(url) {
+            if (typeof url !== "string") return false;
+            const trimmed = url.trim();
+            return /^https?:\/\//i.test(trimmed) || /^data:image\//i.test(trimmed);
+        }
 
         // Helper function to log events to the UI
         function logEvent(eventType, details) {
@@ -265,7 +308,16 @@
             const time = new Date().toLocaleTimeString();
             const item = document.createElement('div');
             item.className = 'event-log-item';
-            item.innerHTML = `<span class="time">[${time}]</span> <span class="type">${eventType}</span> - ${details}`;
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'time';
+            timeSpan.textContent = '[' + time + ']';
+            const typeSpan = document.createElement('span');
+            typeSpan.className = 'type';
+            typeSpan.textContent = eventType;
+            item.appendChild(timeSpan);
+            item.appendChild(document.createTextNode(' '));
+            item.appendChild(typeSpan);
+            item.appendChild(document.createTextNode(' - ' + details));
             log.insertBefore(item, log.firstChild);
         }
 
@@ -273,7 +325,7 @@
         function sendCodeBasedDisplayEvent(proposition) {
             const { id, scope, scopeDetails = {} } = proposition;
 
-            alloy("sendEvent", {
+            return alloy("sendEvent", {
                 xdm: {
                     eventType: "decisioning.propositionDisplay",
                     _experience: {
@@ -289,9 +341,12 @@
                         }
                     }
                 }
-            }).then(function(result) {
+            }).then(function (result) {
                 console.log("Code-based display event sent:", result);
                 logEvent("decisioning.propositionDisplay", "Display event sent for: " + scope);
+            }).catch(function (error) {
+                console.error("Display event failed:", error);
+                logEvent("error", "Display event failed for " + scope);
             });
         }
 
@@ -299,7 +354,7 @@
         function sendCodeBasedInteractEvent(label, proposition) {
             const { id, scope, scopeDetails = {} } = proposition;
 
-            alloy("sendEvent", {
+            return alloy("sendEvent", {
                 xdm: {
                     eventType: "decisioning.propositionInteract",
                     _experience: {
@@ -318,131 +373,166 @@
                         }
                     }
                 }
-            }).then(function(result) {
+            }).then(function (result) {
                 console.log("Code-based interact event sent:", result);
                 logEvent("decisioning.propositionInteract", "Interact event: " + label);
+            }).catch(function (error) {
+                console.error("Interact event failed:", error);
+                logEvent("error", "Interact event failed: " + label);
             });
         }
 
-        // Render an image banner from personalized JSON content.
-        // Supports several common field names for the image URL and caption.
-        function renderImageBanner(section, jsonContent) {
+        // ---------------------------------------------------------------
+        // Proposition helpers
+        // ---------------------------------------------------------------
+        // Find the proposition for a given surface name, matching on the
+        // full scope or exact hash fragment so a shorter name does not match
+        // a longer one (e.g. "-campaign" vs "-campaign-image").
+        function findProposition(propositions, surfaceName) {
+            const fullSurface = SITE_BASE + surfaceName;
+            return propositions.find(function (prop) {
+                const scope = prop.scope || "";
+                return scope === fullSurface ||
+                       scope === surfaceName ||
+                       scope.endsWith("#" + surfaceName) ||
+                       scope.endsWith("/" + surfaceName);
+            });
+        }
+
+        // Pull and parse the JSON content out of a proposition's first item.
+        // Returns { ok, json } (ok === false when missing / invalid).
+        function getPropositionContent(proposition) {
+            if (!proposition || !proposition.items || proposition.items.length === 0) {
+                return { ok: false };
+            }
+            const item = proposition.items[0];
+            let content = null;
+            if (item.data && item.data.content) {
+                content = item.data.content;
+            } else if (item.content) {
+                content = item.content;
+            }
+            if (!content) return { ok: false };
+
+            try {
+                return { ok: true, json: typeof content === 'string' ? JSON.parse(content) : content };
+            } catch (e) {
+                console.error("Failed to parse proposition content", e);
+                return { ok: false, error: e };
+            }
+        }
+
+        // Render the image for a group. Returns true if an image rendered.
+        function renderImage(el, jsonContent) {
             const imageUrl = jsonContent.imageUrl || jsonContent.image || jsonContent.src || jsonContent.url;
             const caption = jsonContent.msg || jsonContent.caption || jsonContent.alt || jsonContent.title || "";
 
-            if (imageUrl) {
-                section.innerHTML = `
-                    <div class="personalized-content">
-                        <strong>🎉 Personalized Image:</strong>
-                        <img class="banner-image" src="${imageUrl}" alt="${caption || 'Personalized banner image'}" />
-                        ${caption ? `<div class="banner-image-caption">💬 ${caption}</div>` : ''}
-                    </div>
-                `;
+            if (imageUrl && isSafeImageUrl(imageUrl)) {
+                const safeUrl = escapeHtml(imageUrl);
+                const safeAlt = escapeHtml(caption || 'Personalized banner image');
+                el.innerHTML =
+                    '<div class="personalized-content">' +
+                        '<img class="banner-image" src="' + safeUrl + '" alt="' + safeAlt + '" />' +
+                        (caption ? '<div class="banner-image-caption">💬 ' + escapeHtml(caption) + '</div>' : '') +
+                    '</div>';
                 return true;
             }
+            if (imageUrl) {
+                logEvent("code-based.warn", "Rejected unsafe image URL for banner");
+            }
             return false;
         }
 
-        // Function to apply personalization to a specific surface/section
-        function applyPersonalizationToSection(propositions, surface) {
-            const section = document.getElementById(surface.elementId);
-            const fullSurface = "web://letsrunatest.com/#" + surface.name;
+        // Render the message for a group.
+        function renderMessage(el, jsonContent) {
+            const prettyJson = escapeHtml(JSON.stringify(jsonContent, null, 2));
+            el.innerHTML =
+                '<div class="personalized-content">' +
+                    '<pre>' + prettyJson + '</pre>' +
+                    (jsonContent.msg
+                        ? '<div class="msg">💬 Message: <strong>' + escapeHtml(jsonContent.msg) + '</strong></div>'
+                        : '') +
+                '</div>';
+        }
 
-            // Find the proposition for this surface. To avoid a shorter
-            // surface name (e.g. "hero-section-campaign") matching a longer
-            // one ("hero-section-campaign-image"), match on the full scope
-            // or the exact hash fragment.
-            const proposition = propositions.find(function(prop) {
-                const scope = prop.scope || "";
-                return scope === fullSurface ||
-                       scope === surface.name ||
-                       scope.endsWith("#" + surface.name) ||
-                       scope.endsWith("/" + surface.name);
-            });
+        // Apply personalization for one combined group (image then message).
+        function applyGroup(propositions, group) {
+            const imageEl = document.getElementById(group.imageElementId);
+            const messageEl = document.getElementById(group.messageElementId);
 
-            if (proposition && proposition.items && proposition.items.length > 0) {
-                // Store the proposition for later interact events
-                propositionStore[surface.name] = proposition;
-
-                // Get the JSON content from the proposition
-                const item = proposition.items[0];
-                let content = null;
-
-                if (item.data && item.data.content) {
-                    content = item.data.content;
-                } else if (item.content) {
-                    content = item.content;
+            // ----- Image surface (shown on top) -----
+            const imageProp = findProposition(propositions, group.imageSurface);
+            const imageContent = getPropositionContent(imageProp);
+            let imageRendered = false;
+            if (imageContent.ok) {
+                propositionStore[group.imageSurface] = imageProp;
+                imageRendered = renderImage(imageEl, imageContent.json);
+                if (imageRendered) {
+                    logEvent("code-based.applied", group.imageSurface + " rendered as banner image");
+                    sendCodeBasedDisplayEvent(imageProp);
+                } else {
+                    // Image surface returned content but no usable image URL.
+                    renderMessage(imageEl, imageContent.json);
+                    logEvent("code-based.applied", group.imageSurface + " (no image URL) rendered as JSON");
+                    sendCodeBasedDisplayEvent(imageProp);
+                    imageRendered = true;
                 }
-
-                if (content) {
-                    // Parse JSON if it's a string
-                    let jsonContent = typeof content === 'string' ? JSON.parse(content) : content;
-
-                    // Image surfaces render an <img>; fall back to JSON if no image URL is present
-                    if (surface.isImage && renderImageBanner(section, jsonContent)) {
-                        logEvent("code-based.applied", surface.name + " personalized with image");
-                        sendCodeBasedDisplayEvent(proposition);
-                        return true;
-                    }
-
-                    // Render the personalized JSON content
-                    section.innerHTML = `
-                        <div class="personalized-content">
-                            <strong>🎉 Personalized Content:</strong>
-                            <pre>${JSON.stringify(jsonContent, null, 2)}</pre>
-                            ${jsonContent.msg ? `<div class="msg">💬 Message: <strong>${jsonContent.msg}</strong></div>` : ''}
-                        </div>
-                    `;
-
-                    logEvent("code-based.applied", surface.name + " personalized with JSON");
-
-                    // Send display event after rendering
-                    sendCodeBasedDisplayEvent(proposition);
-
-                    return true;
-                }
+            } else {
+                imageEl.innerHTML = '<span class="placeholder">No banner. Configure in AJO: ' +
+                    escapeHtml(SITE_BASE + group.imageSurface) + '</span>';
             }
 
-            // No personalization found
-            section.innerHTML = `<span class="placeholder">No personalization returned. Configure in AJO with surface: ${fullSurface}</span>`;
-            logEvent("code-based.none", "No personalization for " + surface.name);
-            return false;
+            // ----- Message surface (shown below) -----
+            const messageProp = findProposition(propositions, group.messageSurface);
+            const messageContent = getPropositionContent(messageProp);
+            let messageRendered = false;
+            if (messageContent.ok) {
+                propositionStore[group.messageSurface] = messageProp;
+                renderMessage(messageEl, messageContent.json);
+                logEvent("code-based.applied", group.messageSurface + " rendered as message");
+                sendCodeBasedDisplayEvent(messageProp);
+                messageRendered = true;
+            } else {
+                messageEl.innerHTML = '<span class="placeholder">No message. Configure in AJO: ' +
+                    escapeHtml(SITE_BASE + group.messageSurface) + '</span>';
+            }
+
+            return imageRendered || messageRendered;
         }
 
-        // Apply personalization to all surfaces
+        // Apply personalization to both combined groups.
         function applyAllPersonalization(propositions) {
-            SURFACES.forEach(function(surface) {
-                applyPersonalizationToSection(propositions, surface);
+            GROUPS.forEach(function (group) {
+                applyGroup(propositions, group);
             });
         }
 
-        // Set the same placeholder/message for every surface's content element
-        function setAllSurfaces(htmlFor) {
-            SURFACES.forEach(function(surface) {
-                const el = document.getElementById(surface.elementId);
-                if (el) {
-                    el.innerHTML = htmlFor(surface);
-                }
+        // Reset the image and message of every group with the same content.
+        function resetSections(htmlFor) {
+            GROUPS.forEach(function (group) {
+                const imageEl = document.getElementById(group.imageElementId);
+                const messageEl = document.getElementById(group.messageElementId);
+                if (imageEl) imageEl.innerHTML = htmlFor(group, 'image');
+                if (messageEl) messageEl.innerHTML = htmlFor(group, 'message');
             });
         }
 
-        // Send Page View event on load and request code-based experience
-        window.addEventListener('load', function() {
-            // Request personalization with code-based experience surface
-            alloy("sendEvent", {
-                renderDecisions: false, // We'll manually render code-based experiences
+        // ---------------------------------------------------------------
+        // Single, shared personalization fetch (used by load + refresh).
+        // Requests all 4 child surface URIs.
+        // ---------------------------------------------------------------
+        function fetchPersonalization(eventType, statusLabel) {
+            return alloy("sendEvent", {
+                renderDecisions: false, // We manually render code-based experiences
                 personalization: {
-                    surfaces: ["web://letsrunatest.com/#hero-section"]
+                    surfaces: SURFACE_URIS
                 },
                 xdm: {
-                    eventType: "web.webpagedetails.pageViews",
+                    eventType: eventType,
                     web: {
                         webPageDetails: {
                             URL: window.location.href,
-                            name: document.title,
-                            pageViews: {
-                                value: 1
-                            }
+                            name: document.title
                         },
                         webReferrer: {
                             URL: document.referrer || ""
@@ -459,31 +549,48 @@
                         }
                     }
                 }
-            }).then(function(result) {
-                console.log("Page View event sent with code-based experience request:", result);
-                logEvent("web.webpagedetails.pageViews", "Page loaded, requesting personalization for 4 surfaces");
+            }).then(function (result) {
+                console.log(statusLabel + " result:", result);
+                logEvent(eventType, statusLabel + " for " + SURFACE_NAMES.length + " surfaces");
 
-                // Log propositions if any were returned
                 if (result.propositions && result.propositions.length > 0) {
-                    console.log("Propositions received:", result.propositions);
                     logEvent("decisioning.propositions", result.propositions.length + " proposition(s) received");
-
-                    // Apply personalization to all sections
                     applyAllPersonalization(result.propositions);
                 } else {
-                    // No propositions - show placeholder for all sections
-                    setAllSurfaces(function(surface) {
-                        return `<span class="placeholder">No personalization. Configure in AJO: web://letsrunatest.com/#${surface.name}</span>`;
+                    resetSections(function (group, part) {
+                        const name = part === 'image' ? group.imageSurface : group.messageSurface;
+                        return '<span class="placeholder">No personalization. Configure in AJO: ' +
+                            SITE_BASE + name + '</span>';
                     });
                     logEvent("code-based.none", "No propositions returned from Edge");
                 }
-            }).catch(function(error) {
-                console.error("Error sending Page View event:", error);
+                return result;
+            }).catch(function (error) {
+                console.error("Error fetching personalization:", error);
+                resetSections(function () {
+                    return '<span class="placeholder">Error: ' + escapeHtml(error.message) + '</span>';
+                });
                 logEvent("error", "Failed to fetch personalization: " + error.message);
             });
+        }
+
+        // Request personalization on page load
+        window.addEventListener('load', function () {
+            fetchPersonalization("web.webpagedetails.pageViews", "Page loaded, requesting personalization");
         });
 
-        // Product View Event
+        // Refresh both combined sections
+        function refreshSections() {
+            resetSections(function () {
+                return '<span class="placeholder">Refreshing...</span>';
+            });
+            fetchPersonalization("decisioning.propositionFetch", "Refreshing personalization");
+        }
+
+        // ---------------------------------------------------------------
+        // Commerce / interaction demo events
+        // ---------------------------------------------------------------
+
         function sendProductViewEvent() {
             alloy("sendEvent", {
                 xdm: {
@@ -512,13 +619,12 @@
                         }
                     }
                 }
-            }).then(function(result) {
+            }).then(function (result) {
                 console.log("Product View event sent:", result);
                 logEvent("commerce.productViews", "SKU: TEST-SKU-001, Price: $99.99");
             });
         }
 
-        // Add to Cart Event
         function sendAddToCartEvent() {
             alloy("sendEvent", {
                 xdm: {
@@ -550,13 +656,12 @@
                         }
                     }
                 }
-            }).then(function(result) {
+            }).then(function (result) {
                 console.log("Add to Cart event sent:", result);
                 logEvent("commerce.productListAdds", "Added TEST-SKU-001 to cart");
             });
         }
 
-        // Purchase Event
         function sendPurchaseEvent() {
             const orderId = "ORD-" + Date.now();
             alloy("sendEvent", {
@@ -599,13 +704,12 @@
                         }
                     }
                 }
-            }).then(function(result) {
+            }).then(function (result) {
                 console.log("Purchase event sent:", result);
                 logEvent("commerce.purchases", "Order: " + orderId + ", Total: $109.98");
             });
         }
 
-        // Custom Link Click Event
         function sendLinkClickEvent(linkName) {
             alloy("sendEvent", {
                 xdm: {
@@ -625,13 +729,12 @@
                         }
                     }
                 }
-            }).then(function(result) {
+            }).then(function (result) {
                 console.log("Link Click event sent:", result);
                 logEvent("web.webinteraction.linkClicks", "Link: " + linkName);
             });
         }
 
-        // Search Event
         function sendSearchEvent() {
             const searchTerm = prompt("Enter search term:", "test product");
             if (searchTerm) {
@@ -650,14 +753,13 @@
                             }
                         }
                     }
-                }).then(function(result) {
+                }).then(function (result) {
                     console.log("Search event sent:", result);
                     logEvent("search.productSearch", "Keywords: " + searchTerm);
                 });
             }
         }
 
-        // Request Personalization with automatic display events
         function requestPersonalization() {
             alloy("sendEvent", {
                 renderDecisions: true,
@@ -674,28 +776,25 @@
                         }
                     }
                 }
-            }).then(function(result) {
+            }).then(function (result) {
                 console.log("Personalization request sent:", result);
                 logEvent("decisioning.propositionFetch", "Requested personalization");
 
                 if (result.propositions && result.propositions.length > 0) {
                     logEvent("decisioning.propositions", result.propositions.length + " proposition(s) received");
-
-                    // Display events sent automatically
-                    result.propositions.forEach(function(prop) {
+                    result.propositions.forEach(function (prop) {
                         console.log("Proposition:", prop);
                         logEvent("decisioning.display", "Auto display for: " + (prop.scope || "default"));
                     });
                 } else {
                     logEvent("decisioning.propositions", "No propositions returned (check Target/Offer Decisioning config)");
                 }
-            }).catch(function(error) {
+            }).catch(function (error) {
                 console.error("Personalization error:", error);
                 logEvent("error", "Personalization request failed");
             });
         }
 
-        // Manual display event for custom rendered content
         function sendManualDisplayEvent() {
             alloy("sendEvent", {
                 xdm: {
@@ -724,81 +823,36 @@
                         }
                     }
                 }
-            }).then(function(result) {
+            }).then(function (result) {
                 console.log("Manual display event sent:", result);
                 logEvent("decisioning.propositionDisplay", "Manual display event sent for custom-banner");
             });
         }
 
-        // Refresh all sections - fetch personalization again for all 4 surfaces
-        function refreshSections() {
-            setAllSurfaces(function() {
-                return `<span class="placeholder">Refreshing...</span>`;
-            });
-
-            alloy("sendEvent", {
-                renderDecisions: false,
-                personalization: {
-                    surfaces: SURFACES.map(function(surface) {
-                        return "web://letsrunatest.com/#" + surface.name;
-                    })
-                },
-                xdm: {
-                    eventType: "decisioning.propositionFetch",
-                    web: {
-                        webPageDetails: {
-                            URL: window.location.href,
-                            name: document.title
-                        }
-                    }
+        // Fire interact events for a combined group. Sends an interact for
+        // whichever of the group's surfaces (image and/or message) rendered.
+        function sendGroupInteractEvent(group, label) {
+            let fired = false;
+            [group.imageSurface, group.messageSurface].forEach(function (surfaceName) {
+                const proposition = propositionStore[surfaceName];
+                if (proposition) {
+                    sendCodeBasedInteractEvent(label, proposition);
+                    fired = true;
                 }
-            }).then(function(result) {
-                console.log("Sections refresh result:", result);
-                logEvent("code-based.refresh", "Refreshing personalization for 4 surfaces");
-
-                if (result.propositions && result.propositions.length > 0) {
-                    applyAllPersonalization(result.propositions);
-                } else {
-                    setAllSurfaces(function(surface) {
-                        return `<span class="placeholder">No personalization. Configure: web://letsrunatest.com/#${surface.name}</span>`;
-                    });
-                    logEvent("code-based.none", "No propositions on refresh");
-                }
-            }).catch(function(error) {
-                console.error("Error refreshing sections:", error);
-                setAllSurfaces(function() {
-                    return `<span class="placeholder">Error: ${error.message}</span>`;
-                });
             });
-        }
-
-        // Generic interact handler for a given surface name
-        function sendSurfaceInteractEvent(surfaceName, label) {
-            const proposition = propositionStore[surfaceName];
-            if (proposition) {
-                sendCodeBasedInteractEvent(label, proposition);
-            } else {
-                logEvent("code-based.error", "No proposition to interact with for " + surfaceName);
-                alert("No personalization applied for " + surfaceName + ". Wait for it to load or click 'Refresh Sections'.");
+            if (!fired) {
+                logEvent("code-based.error", "No proposition to interact with for " + group.id +
+                    " - wait for load or click 'Refresh Sections'");
             }
         }
 
         function sendCampaignInteractEvent() {
-            sendSurfaceInteractEvent('hero-section-campaign', 'campaign-section-click');
-        }
-
-        function sendCampaignImageInteractEvent() {
-            sendSurfaceInteractEvent('hero-section-campaign-image', 'campaign-image-section-click');
+            sendGroupInteractEvent(GROUPS[0], 'campaign-section-click');
         }
 
         function sendJourneyInteractEvent() {
-            sendSurfaceInteractEvent('hero-section-journey', 'journey-section-click');
+            sendGroupInteractEvent(GROUPS[1], 'journey-section-click');
         }
-
-        function sendJourneyImageInteractEvent() {
-            sendSurfaceInteractEvent('hero-section-journey-image', 'journey-image-section-click');
-        }
-
     </script>
 
 </head>
@@ -809,30 +863,20 @@
         <p>A sandbox for experimenting with code, configurations, and workflows.</p>
         <div class="status">Site is live and running!</div>
 
-        <!-- Code-Based Experience Surfaces Container (4 child surfaces) -->
+        <!-- Two combined code-based experience sections -->
         <div class="surfaces-container">
-            <!-- Campaign Surface -->
+            <!-- Campaign (banner image followed by message) -->
             <div class="hero-section campaign" id="hero-section-campaign">
-                <h3>📢 Campaign Surface (hero-section-campaign)</h3>
-                <div id="hero-section-campaign-content"><span class="placeholder">No personalization. Configure in AJO: web://letsrunatest.com/#hero-section-campaign</span></div>
+                <h3>📢 Campaign</h3>
+                <div class="surface-block" id="campaign-image"><span class="placeholder">No banner. Configure in AJO: web://letsrunatest.com/#hero-section-campaign-image (JSON offer with an "imageUrl" field)</span></div>
+                <div class="surface-block" id="campaign-message"><span class="placeholder">No message. Configure in AJO: web://letsrunatest.com/#hero-section-campaign</span></div>
             </div>
 
-            <!-- Campaign Banner Surface -->
-            <div class="hero-section image" id="hero-section-campaign-image">
-                <h3>🖼️ Campaign Banner Surface (hero-section-campaign-image)</h3>
-                <div id="hero-section-campaign-image-content"><span class="placeholder">No personalization. Configure in AJO: web://letsrunatest.com/#hero-section-campaign-image (JSON offer with an "imageUrl" field)</span></div>
-            </div>
-
-            <!-- Journey Surface -->
+            <!-- Journey (banner image followed by message) -->
             <div class="hero-section journey" id="hero-section-journey">
-                <h3>🚀 Journey Surface (hero-section-journey)</h3>
-                <div id="hero-section-journey-content"><span class="placeholder">No personalization. Configure in AJO: web://letsrunatest.com/#hero-section-journey</span></div>
-            </div>
-
-            <!-- Journey Banner Surface -->
-            <div class="hero-section image" id="hero-section-journey-image">
-                <h3>🖼️ Journey Banner Surface (hero-section-journey-image)</h3>
-                <div id="hero-section-journey-image-content"><span class="placeholder">No personalization. Configure in AJO: web://letsrunatest.com/#hero-section-journey-image (JSON offer with an "imageUrl" field)</span></div>
+                <h3>🚀 Journey</h3>
+                <div class="surface-block" id="journey-image"><span class="placeholder">No banner. Configure in AJO: web://letsrunatest.com/#hero-section-journey-image (JSON offer with an "imageUrl" field)</span></div>
+                <div class="surface-block" id="journey-message"><span class="placeholder">No message. Configure in AJO: web://letsrunatest.com/#hero-section-journey</span></div>
             </div>
         </div>
 
@@ -846,9 +890,7 @@
             <button class="event-btn" onclick="sendManualDisplayEvent()">👁️ Manual Display Event</button>
             <button class="event-btn" onclick="refreshSections()">🔄 Refresh Sections</button>
             <button class="event-btn" onclick="sendCampaignInteractEvent()">👆 Campaign Interact</button>
-            <button class="event-btn" onclick="sendCampaignImageInteractEvent()">👆 Campaign Image Interact</button>
             <button class="event-btn" onclick="sendJourneyInteractEvent()">👆 Journey Interact</button>
-            <button class="event-btn" onclick="sendJourneyImageInteractEvent()">👆 Journey Image Interact</button>
         </div>
 
         <div class="event-log" id="eventLog">
