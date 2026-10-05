@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your simulated escape is confirmed | Wayfarer</title><meta name="description" content="An original travel demo for Adobe Content Analytics and Customer Journey Analytics. No real bookings or payments.">
+<link rel="stylesheet" href="/wayfarer/assets/styles.css">
+<script>window.adobe = window.adobe || {}; window.adobe.getContentExperienceVersion = () => "wayfarer-1.0";</script>
+<script type="module" src="/wayfarer/assets/app.mjs"></script></head>
+<body data-page="confirmation" data-destination="kyoto" data-base-path="/wayfarer/">
+<div class="demo-strip">A travel-inspired Content Analytics demo <span>Explore freely. All bookings are simulated.</span></div>
+<header class="site-header"><a class="brand" href="/wayfarer/" aria-label="Wayfarer home"><span class="brand-mark">w.</span>wayfarer</a>
+<nav aria-label="Main navigation"><a href="/wayfarer/explore/">Destinations</a><a href="/wayfarer/explore/adventure/">Adventures</a></nav><a class="button button-small" href="/wayfarer/explore/">Find your escape &nearr;</a></header>
+<main id="main">
+<section class="section confirmation"><p class="eyebrow">Your next chapter / Step 2 of 2</p><h1 class="page-title">A new story<br>starts here.</h1><p class="intro" id="receipt-message">Complete a mock booking to see its confirmation.</p><div class="trip-summary" id="receipt-details" hidden><h2>Kyoto, here you come.</h2><p id="receipt-number"></p><p id="receipt-total"></p><p>This is a demo receipt, not a real reservation. No payment was taken.</p></div><a class="button" href="/wayfarer/explore/">Keep exploring &rarr;</a><a class="text-link" href="/wayfarer/booking/kyoto/">Start a new mock booking</a></section></main>
+<footer><a class="brand" href="/wayfarer/">wayfarer</a><p>Go somewhere that stays with you.</p><div><span>Original illustrative artwork. Fictional offers. No personal data requested.</span><button class="text-button" id="privacy-settings">Privacy settings</button></div></footer>
+<section class="consent" id="consent-banner" aria-label="Analytics consent" hidden><div><strong>Your journey, your choice.</strong><p>Allow Adobe analytics to measure page, image, and simulated booking interactions. Declining keeps analytics off; the demo still works.</p></div><div class="consent-actions"><button id="decline-analytics" class="button button-outline">Decline</button><button id="accept-analytics" class="button">Allow analytics</button></div></section>
+<aside class="tracking-indicator" aria-live="polite"><span class="status-dot"></span><span id="tracking-status">Analytics not started</span></aside>
+<noscript><p class="notice">JavaScript is required for filtering, mock bookings, and analytics. Destination content remains available.</p></noscript>
+</body></html>
